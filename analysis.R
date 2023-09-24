@@ -4,12 +4,20 @@ library(tidyverse)
 # load functions
 source("functions.R")
 
-# load review data
+# load review data from covidence
 Data <- read_csv("review_283729_20230922170037.csv")
 
-# format data
-Data_New <- Data %>%
-              select(StudyID = `Study ID`, Title, PaperType = `What type of paper is this?`, Region = `Select all geographic regions the paper focusses on according to UN standard area codes (https://unstats.un.org/unsd/methodology/m49/)`, Scale = `Select the relevant spatial scales (extent) of the study. Choose all that apply.`, Nexus = `Which nexus elements are considered?`, NChallenge = `Does the study provide evidence for addressing any of the following nexus challenges?`, Gov = `Are any of the following governance approaches proposed or assessed as solutions to the above nexus challenges? Use your judgement to select one of the four governance approaches listed and then use the \"other\" category to list any specific governance approaches referred to in the study (separate multiple governance approaches with \",\")`, Policy = `What type of policy instruments are considered to operationalise the response options proposed or assessed?`, Actors = `Which types of actors are involved in the implementation of the response options proposed or assessed?`, CrossCut = `Which of the following cross cutting issues are considered?`) %>%
+# extract data on paper types, regions, scale, nexus elements, nexus challnenges
+# governance types, policy instruments, actors, and cross cutting issues
+Data_Select <- Data %>%
+              select(CovidenceID = `Covidence #`, Title, PaperType = `What type of paper is this?`, Region = `Select all geographic regions the paper focusses on according to UN standard area codes (https://unstats.un.org/unsd/methodology/m49/)`, Scale = `Select the relevant spatial scales (extent) of the study. Choose all that apply.`, Nexus = `Which nexus elements are considered?`, NChallenge = `Does the study provide evidence for addressing any of the following nexus challenges?`, Gov = `Are any of the following governance approaches proposed or assessed as solutions to the above nexus challenges? Use your judgement to select one of the four governance approaches listed and then use the \"other\" category to list any specific governance approaches referred to in the study (separate multiple governance approaches with \",\")`, Policy = `What type of policy instruments are considered to operationalise the response options proposed or assessed?`, Actors = `Which types of actors are involved in the implementation of the response options proposed or assessed?`, CrossCut = `Which of the following cross cutting issues are considered?`)
+
+# save data for manual error checking - we used this to ckeck for errors and correct in
+# covidence where necessary
+write_csv(Data_Select, "error_check.csv")
+
+# split multiple responses for the same paper
+Data_Select_Split <- Data_Select %>%
               mutate(PaperType = str_split(str_squish(PaperType),"; ")) %>%
               mutate(Region = str_split(str_squish(Region),"; ")) %>%
               mutate(Scale = str_split(str_squish(Scale),"; ")) %>%
@@ -19,6 +27,47 @@ Data_New <- Data %>%
               mutate(Policy = str_split(str_squish(Policy),"; ")) %>%
               mutate(Actors = str_split(str_squish(Actors),"; ")) %>%
               mutate(CrossCut = str_split(str_squish(CrossCut),"; "))
+
+# summarise paper types
+
+# get which papers are reviews
+# and count them
+Count_Review <- map(Data_Select_Split$PaperType, .f = function(x)
+      {any(x == "Review")}) %>%
+      unlist() %>% which() %>% length()
+Count_Review
+
+# get which papers are only perspective, cocceptual/theoretical, or opinion papers
+# and count them
+Count_Pers_Concept_Opinion_Only <- map(Data_Select_Split$PaperType, .f = function(x)
+      {any((x == "Perspective") | (x == "Conceptual/theoretical") | (x == "Opinion")) &
+      !any((x == "Review") | (x == "Empirical") | (x == "Modelling"))}) %>%
+      unlist() %>% which() %>% length()
+Count_Pers_Concept_Opinion_Only
+
+# get which papers which contain empirical data
+# and count them
+Count_Empirical <- map(Data_Select_Split$PaperType, .f = function(x)
+      {any(x == "Empirical")}) %>%
+      unlist() %>% which() %>% length()
+Count_Empirical
+
+# get which papers which contain modelling studies
+# and count them
+Count_Modelling <- map(Data_Select_Split$PaperType, .f = function(x)
+      {any(x == "Modelling")}) %>%
+      unlist() %>% which() %>% length()
+Count_Modelling
+
+# identify which papers are assessments or reports
+# and count them
+Count_Assessment <- map(Data_Select_Split$PaperType, .f = function(x)
+      {any(str_detect(x, fixed("assessment", ignore_case = TRUE)) |
+      str_detect(x, fixed("report", ignore_case = TRUE)))}) %>%
+      unlist() %>% which() %>% length()
+Count_Assessment
+
+# FROM HERE ON IS OLD STUFF
 
 # make simple histograms of frequencies
 
