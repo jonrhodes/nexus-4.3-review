@@ -1,5 +1,6 @@
 # load packages
 library(tidyverse)
+library(ggalluvial)
 
 # load functions
 source("functions.R")
@@ -27,6 +28,18 @@ Data_Select_Split <- Data_Select %>%
               mutate(Policy = str_split(str_squish(Policy),"; ")) %>%
               mutate(Actors = str_split(str_squish(Actors),"; ")) %>%
               mutate(CrossCut = str_split(str_squish(CrossCut),"; "))
+
+# remove any further leading or trailing white space
+Data_Select_Split <- Data_Select_Split %>%
+              mutate(PaperType = map(PaperType, .f = str_squish)) %>%
+              mutate(Region = map(Region, .f = str_squish)) %>%
+              mutate(Scale = map(Scale, .f = str_squish)) %>%
+              mutate(Nexus = map(Nexus, .f = str_squish)) %>%
+              mutate(NChallenge = map(NChallenge, .f = str_squish)) %>%
+              mutate(Gov = map(Gov, .f = str_squish)) %>%
+              mutate(Policy = map(Policy, .f = str_squish)) %>%
+              mutate(Actors = map(Actors, .f = str_squish)) %>%
+              mutate(CrossCut = map(CrossCut, .f = str_squish))
 
 # summarise paper types
 
@@ -67,7 +80,96 @@ Count_Assessment <- map(Data_Select_Split$PaperType, .f = function(x)
       unlist() %>% which() %>% length()
 Count_Assessment
 
-# FROM HERE ON IS OLD STUFF
+# summarise regions
+
+# get counts
+Regions <- unlist(Data_Select_Split$Region) %>% as_tibble() %>%
+      mutate(Region = ifelse(is.na(value), "Not applicable (no specific spatial location)", value)) %>%
+        count(Region)
+
+# write to csv
+write_csv(Regions, "regions_counts.csv")
+
+# summarise spatial scales
+
+# get counts
+Scales <- unlist(Data_Select_Split$Scale) %>% as_tibble() %>%
+      mutate(Scale = ifelse(is.na(value), "Not applicable (no specific spatial location)", value)) %>%
+        count(Scale)
+
+# write to csv
+write_csv(Regions, "scales_counts.csv")
+
+# summarise nexus challenges -  remove "Other" responses
+
+# get look up table so as to rename nexus challenges with correct names
+Lookup <- read_csv("nchallenges_lookup.csv")
+
+# get counts
+NChallenges <- unlist(Data_Select_Split$NChallenge) %>% as_tibble() %>%
+      mutate(NChallenge = value) %>% filter(!str_detect(NChallenge, "Other:") |
+      is.na(NChallenge)) %>%
+      left_join(Lookup, by = join_by(NChallenge)) %>% select(-NChallenge) %>%
+      mutate(NChallenge = NChallenge_New) %>%
+      count(NChallenge)
+
+# write to csv
+write_csv(NChallenges, "nchallenges_counts.csv")
+
+# summarise nexus elements -  remove "Other" responses
+
+# get counts of each nexus elements
+Nexuses <- unlist(Data_Select_Split$Nexus) %>% as_tibble() %>%
+      mutate(Nexus = value) %>% count(Nexus)
+
+# write to csv
+write_csv(NChallenges, "nexuses_counts.csv")
+
+# get counts of the numbers of nexus elements considered
+NumNexuses <- Data_Select_Split$Nexus %>% map(.f = function (x)
+      {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
+      as_tibble() %>% mutate(NumNexus = value) %>% count(NumNexus)
+
+# write to csv
+write_csv(NumNexuses, "num_nexuses_counts.csv")
+
+# get median number of nexus elements considered
+Data_Select_Split$Nexus %>% map(.f = function (x)
+      {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
+      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, median, na.rm = TRUE))
+
+# get mean number of nexus elements considered
+Data_Select_Split$Nexus %>% map(.f = function (x)
+      {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
+      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, mean, na.rm = TRUE))
+
+# get alluvial plot of nexus challenges versus nexus elements
+
+# get look up table so as to rename nexus challenges with correct names
+Lookup <- read_csv("nchallenges_lookup.csv")
+
+# get all combinations of nexus challenges and nexus elementsd for each study
+Challenges_Nexuses <- Data_Select_Split$NChallenge %>% map2(Data_Select_Split$Nexus,
+                       .f = get_challenge_nexus)
+# row bind list, and get correct names for nexus challenges and drop NA rows
+Challenges_Nexuses <- do.call(bind_rows, Challenges_Nexuses) %>%
+    left_join(Lookup, by = join_by(NChallenge)) %>% select(-NChallenge) %>%
+      rename(NChallenge = NChallenge_New) %>% select(NChallenge, Nexus) %>%
+      filter(!is.na(NChallenge))
+# group by challenges and nexus elements and calculatye the frequency of each unique
+# combination
+Challenges_Nexuses <- Challenges_Nexuses %>% group_by(NChallenge, Nexus) %>%
+    summarize(Freq = n()) %>% ungroup()
+
+# create alluvium plot - I GOT STUCK HERE
+ggplot(Challenges_Nexuses, aes(y = Freq, axis1 = NChallenge, axis2 = Nexus)) +
+    geom_alluvium(aes(fill = Freq), width = 1/12) +
+    geom_stratum(width = 1/12, fill = "black", color = "grey") +
+    geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
+    scale_x_discrete(limits = c("Nexus challenge", "Nexus element"), expand = c(.05, .05)) +
+    scale_fill_brewer(type = "qual", palette = "Set1")
+
+# FROM HERE ON IS OLD STUFF - IGNORE FOR NOW BUT SOME OF THE CODE MAY BE REUSABLE
 
 # make simple histograms of frequencies
 

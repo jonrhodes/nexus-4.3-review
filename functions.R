@@ -28,7 +28,18 @@ check_nexus <- function(Data, Nex) {
   return(any(Data == Nex))
 }
 
-# funciton to replace text containing "other" with just "other"
+# function to replace text containing "other" with just "other"
 replace_other <- function(X) {
   return(as_tibble(gsub(".*Other.*", "Other", X) %>% na.omit()))
+}
+
+# function to create all combinations of nexus challenges and nexus elements for a given paper
+# X = vector of nexus challenges, Y = vector of nexus elements
+get_challenge_nexus <- function(X, Y) {
+  if (is.na(X[1]) | is.na(Y[1])) {
+      return(c(NA, NA) %>% t() %>% as_tibble() %>% mutate(NChallenge = as.character(V1), Nexus = as.character(V2)) %>% select(-V1, -V2))
+  }
+  else {
+    return(expand_grid(X, Y) %>% rename(NChallenge = names(.)[1], Nexus = names(.)[2]))
+  }
 }
