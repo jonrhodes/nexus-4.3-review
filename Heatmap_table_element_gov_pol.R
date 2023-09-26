@@ -210,22 +210,22 @@ rownames(merged_table_remove_names) <- NULL
 color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#D25B1D"))(100)
 
 # Create the heatmap
-my_plot <- heatmap(
-  as.matrix(merged_table_remove_names),  # Convert the data to a matrix
-  col = color_palette,  # Set the color palette
-  Rowv = NA,  # Do not cluster rows
-  Colv = NA,  # Do not cluster columns
-  labRow = result_dissolved$rowname,  # Use the row names
-  labCol = colnames(result_dissolved[2:11]),  # Use the column names
-  cexRow = 0.8,  # Adjust the row label size
-  cexCol = 0.8,  # Adjust the column label size
-  #margins = c(5, 10),  # Adjust the margins
-  #main = "Heatmap Title"  # Add a title +
-  geom_text(aes(label = value))
-)
+# my_plot <- heatmap(
+#   as.matrix(merged_table_remove_names),  # Convert the data to a matrix
+#   col = color_palette,  # Set the color palette
+#   Rowv = NA,  # Do not cluster rows
+#   Colv = NA,  # Do not cluster columns
+#   labRow = result_dissolved$rowname,  # Use the row names
+#   labCol = colnames(result_dissolved[2:11]),  # Use the column names
+#   cexRow = 0.8,  # Adjust the row label size
+#   cexCol = 0.8,  # Adjust the column label size
+#   #margins = c(5, 10),  # Adjust the margins
+#   #main = "Heatmap Title"  # Add a title +
+#   geom_text(aes(label = value))
+# )
 
+#Using pheatmap actually worked better for me!
 heatmap <- pheatmap(as.matrix(merged_table_remove_names), display_numbers = T, number_format = "%.0f", color = colorRampPalette(c("#B2D78C", "#0D7674", "#D25B1D"))(100), cluster_rows = F, cluster_cols = F, fontsize_number = 10, labels_row = result_dissolved$rowname, labels_col = colnames(result_dissolved[2:11]), fontsize_row = 8, fontsize_col = 10, angle_col = "45", border_color = NA)
-
 
 # Save the heatmap to a PNG file
 png("D:/IPBES_review/nexus-4.3-review/heatmap_policy.png", width = 600, height = 600)  # Adjust width and height as needed
