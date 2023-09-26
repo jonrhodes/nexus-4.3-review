@@ -41,6 +41,66 @@ Data_Select_Split <- Data_Select_Split %>%
               mutate(Actors = map(Actors, .f = str_squish)) %>%
               mutate(CrossCut = map(CrossCut, .f = str_squish))
 
+# use lookup tables to recategorise nexus challenges, governance, and actors
+
+# nexus challenges
+
+# get look up table so as to rename nexus challenges with correct names
+LookupNC <- unique(unlist(Data_Select_Split$NChallenge))[unique(unlist(Data_Select_Split$NChallenge)) %>%
+          str_detect(fixed("other", ignore_case = TRUE), negate = TRUE) %>% which()]
+LookupNC <- LookupNC %>% as_tibble() %>% rename(NChallenge = value) %>% mutate(NChallenge_New = NChallenge) %>%
+              mutate(NChallenge_New = case_when(
+                str_detect(NChallenge, "Complexity") ~ "Complexity Challenges",
+                str_detect(NChallenge, "Values") ~ "Values Challenges",
+                str_detect(NChallenge, "Governance") ~ "Governance Challenges",
+                str_detect(NChallenge, "Financial") ~ "Financing Challenges",
+                str_detect(NChallenge, "Knowledge") ~ "Scaling Challenges"
+              ))
+
+# write to csv
+write_csv(LookupNC, "nchallenges_lookup.csv")
+
+# rename nexus challenges - note that this removes "other" responses - change code here to avoid this or do something else
+Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
+                     .f = function(x) {y <- as_tibble(x) %>% left_join(LookupNC, by = join_by(value == NChallenge)) %>% select(-value);
+                       if (all(is.na(y$NChallenge_New))) {return(as.vector(y$NChallenge_New))} else
+                       {return(as.vector(filter(y, !is.na(NChallenge_New))$NChallenge_New))}}))
+
+# actors
+
+# get look up table so as to rename actors with new actor categories
+LookupAct <- unique(unlist(Data_Select_Split$Actors))[unique(unlist(Data_Select_Split$Actors)) %>%
+          str_detect(fixed("other", ignore_case = TRUE), negate = TRUE) %>% which()]
+LookupAct <- LookupAct %>% as_tibble() %>% rename(Actors = value) %>% mutate(Actors_New = Actors) %>%
+              mutate(Actors_New = case_when(
+                str_detect(Actors, "Private") ~ "Private Sector and Business Organisations",
+                str_detect(Actors, "Funders") ~ "Financial Institutions",
+                str_detect(Actors, "NGOs") ~ "Civil Society and Community-Based Organisations",
+                str_detect(Actors, "Multilateral Organisations") ~ "Global/Regional Institutions and Science-Policy Interfaces",
+                str_detect(Actors, "Civil Society") ~ "Civil Society and Community-Based Organisations",
+                str_detect(Actors, "Media") ~ "Media and the Arts",
+                str_detect(Actors, "IPLCs") ~ "IPLCs",
+                str_detect(Actors, "Regional Organisations") ~ "Global/Regional Institutions and Science-Policy Interfaces",
+                str_detect(Actors, "Governments") ~ "Local/National Governments and Municipalities",
+                str_detect(Actors, "Academia") ~ "Knowledge and Educational Communities"
+              ))
+
+# write to csv
+write_csv(LookupAct, "actors_lookup.csv")
+
+# rename actors - note that this removes "other" responses - change code here to avoid this or do something else
+Data_Select_Split <- Data_Select_Split %>% mutate(Actors = map(Actors,
+                     .f = function(x) {y <- as_tibble(x) %>% left_join(LookupAct, by = join_by(value == Actors)) %>% select(-value);
+                       if (all(is.na(y$Actors_New))) {return(as.vector(y$Actors_New))} else
+                       {return(as.vector(filter(y, !is.na(Actors_New))$Actors_New))}}))
+
+# governance - STILL TO FINISH THIS
+
+# get look up table so as to rename governance types
+LookupGov <- unique(unlist(Data_Select_Split$Gov)) %>% as_tibble() %>%
+                mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE)) %>%
+                  str_squish() %>% str_split(","))
+
 # summarise paper types
 
 # get which papers are reviews
@@ -100,17 +160,11 @@ Scales <- unlist(Data_Select_Split$Scale) %>% as_tibble() %>%
 # write to csv
 write_csv(Regions, "scales_counts.csv")
 
-# summarise nexus challenges -  remove "Other" responses
-
-# get look up table so as to rename nexus challenges with correct names
-Lookup <- read_csv("nchallenges_lookup.csv")
+# summarise nexus challenges
 
 # get counts
 NChallenges <- unlist(Data_Select_Split$NChallenge) %>% as_tibble() %>%
-      mutate(NChallenge = value) %>% filter(!str_detect(NChallenge, "Other:") |
-      is.na(NChallenge)) %>%
-      left_join(Lookup, by = join_by(NChallenge)) %>% select(-NChallenge) %>%
-      mutate(NChallenge = NChallenge_New) %>%
+      mutate(NChallenge = value) %>%
       count(NChallenge)
 
 # write to csv
@@ -145,16 +199,11 @@ Data_Select_Split$Nexus %>% map(.f = function (x)
 
 # get alluvial plot of nexus challenges versus nexus elements
 
-# get look up table so as to rename nexus challenges with correct names
-Lookup <- read_csv("nchallenges_lookup.csv")
-
 # get all combinations of nexus challenges and nexus elementsd for each study
 Challenges_Nexuses <- Data_Select_Split$NChallenge %>% map2(Data_Select_Split$Nexus,
                        .f = get_challenge_nexus)
-# row bind list, and get correct names for nexus challenges and drop NA rows
+# row bind list and remove NA values
 Challenges_Nexuses <- do.call(bind_rows, Challenges_Nexuses) %>%
-    left_join(Lookup, by = join_by(NChallenge)) %>% select(-NChallenge) %>%
-      rename(NChallenge = NChallenge_New) %>% select(NChallenge, Nexus) %>%
       filter(!is.na(NChallenge))
 # group by challenges and nexus elements and calculatye the frequency of each unique
 # combination
