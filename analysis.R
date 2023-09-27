@@ -1,6 +1,15 @@
 # load packages
 library(tidyverse)
 library(ggalluvial)
+library(dplyr)
+library(stringr)
+library(gplots)
+library(tidyr)
+library(pheatmap)
+library(stringdist)
+library(sf)
+library(RColorBrewer)
+library(ggplot2)
 
 # load functions
 source("functions.R")
@@ -416,6 +425,307 @@ ggplot(PlotData, aes(`Policy Instrument`, Governance, col = n, fill = n, label =
 
 ggsave("Template.jpg", width = 10, height = 10, units = "cm")
 
+
+
+#Code to create figure 4.11 - Geographic distribution of studies
+#Can download shp file here (not official UN data): https://thematicmapping.org/downloads/world_borders.php
+#Can download the official UN shpfile here (but it only goes to region, not the subregions that we use): https://data.unhabitat.org/datasets/GUO-UN-Habitat::m49-regions/about
+#Can download the UN country to region table here: https://unstats.un.org/unsd/methodology/m49/overview/
+# https://data.unhabitat.org/search?collection=Dataset&q=M49%20regions
+# Read the countries shapefile 
+shp_data <- st_read("./data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
+# Rename the column in shp_data to match the UN table
+shp_data <- shp_data %>%
+  rename(ISO.alpha3.Code = ISO3)
+# Read the UN table file into a data frame
+csv_data <- read.csv("./data/UNSD — Methodology.csv", sep = ";")
+#Merge together
+merged_data <- merge(shp_data, csv_data, by = "ISO.alpha3.Code")
+
+# Read in the region counts from review
+region_counts <- read.csv("./regions_counts.csv")
+# Rename region column name to match UN table
+colnames(region_counts)[colnames(region_counts) == "Region"] <- "Sub.region.Name"
+#Merge together
+merged_data <- merge(merged_data, region_counts, by = "Sub.region.Name")
+
+# Define the color scale from red (highest) to yellow (lowest)
+color_scale <- scale_fill_gradient(low = "#B2D78C", high = "#67518A")
+
+# Plot the shapefile without displaying country polygon borders
+my_plot <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = n), color = "NA") +  
+  color_scale +
+  labs(title = "Number of studies in each region", fill = "Count") +
+  theme_minimal()
+
+# Export the ggplot as a PNG image
+ggsave(filename = "./studies_region_counts.png", plot = my_plot, width = 6, height = 4, dpi = 300)
+
+
+#Code to create figure 4.14 - heatmap showing nexus elements, governance types and policy instruments
+# Read the Review data
+csv_data <- Data
+governance_lookup <- read.csv("./governance_lookup.csv")
+
+# Define the list of elements
+elements <- c("Biodiversity", "Climate", "Health", "Food", "Water")
+# Generate all possible combinations of elements
+all_combinations <- unlist(sapply(1:length(elements), function(n) combn(elements, n, paste, collapse = "; ")))
+
+#Need to use this later on for merging the generated tables together
+table_names_policy <- c()
+table_names_governance <- c()
+#combo <- all_combinations[2:2]
+# Create and name dataframes for each combination
+for (combo in all_combinations) {
+  # Define a unique name for each dataframe based on the combination
+  df_name <- paste("subset_", gsub("[^[:alnum:]]", "_", combo), sep = "")
+  # Filter for exact matches of the combination
+  subset_df <- csv_data %>%
+    filter(`Which.nexus.elements.are.considered.` == combo)
+  # Assign the dataframe to the dynamically generated name
+  assign(df_name, subset_df)
+  # Print or do something with the subset DataFrame
+  # For example, print the first few rows
+  # cat("Subset for combination:", combo, "\n")
+  # print(head(get(df_name)))
+  df <- get(df_name)
+  # Extract the columns of interest
+  column_data_policy <- df$`What.type.of.policy.instruments.are.considered.to.operationalise.the.response.options.proposed.or.assessed.`
+  column_data_governance <- df$Are.any.of.the.following.governance.approaches.proposed.or.assessed.as.solutions.to.the.above.nexus.challenges..Use.your.judgement.to.select.one.of.the.four.governance.approaches.listed.and.then.use.the..other..category.to.list.any.specific.governance.approaches.referred.to.in.the.study..separate.multiple.governance.approaches.with.....
+  # Split the elements in each row by semicolon
+  split_elements_policy <- strsplit(column_data_policy, "; ")
+  split_elements_governance <- strsplit(column_data_governance, "; ")
+  # Flatten the list of split elements
+  all_elements_policy <- unlist(split_elements_policy)
+  all_elements_governance <- unlist(split_elements_governance)
+  
+  # Create a frequency table for policy
+  table_result_policy <- table(all_elements_policy)
+  table_df_policy <- as.data.frame(table_result_policy)
+  
+  if (nrow(table_df_policy)>0){
+    # Convert the frequency table to a data frame
+    # Rename the columns for clarity
+    colnames(table_df_policy) <- c("Policy Instrument", "Count")
+  } else{
+    table_df_policy <- table_df_policy
+  }
+  # Define the name for the table as "table." followed by df_name
+  table_name_pol <- paste("tablepol.", df_name, sep = "")
+  # Assign the table to the name
+  assign(table_name_pol, table_df_policy)
+  # Display the resulting table
+  print(table_df_policy)
+  table_names_policy <- c(table_names_policy, table_name_pol)
+  
+  # Create a frequency table for policy
+  table_result_governance <- table(all_elements_governance)
+  table_df_governance <- as.data.frame(table_result_governance)
+  
+  if (nrow(table_df_governance)>0){
+    # Convert the frequency table to a data frame
+    # Rename the columns for clarity
+    colnames(table_df_governance) <- c("Governance type", "Count")
+  } else{
+    table_df_governance <- table_df_governance
+  }
+  # Define the name for the table as "table." followed by df_name
+  table_name_gov <- paste("tablegov.", df_name, sep = "")
+  # Assign the table to the name
+  assign(table_name_gov, table_df_governance)
+  # Display the resulting table
+  print(table_df_governance)
+  table_names_governance <- c(table_names_governance, table_name_gov)
+}
+
+#Put the tables in the correct format
+# Create an empty list to store the tables
+table_list <- list()
+
+# Loop through each table name
+for (table_name in table_names_policy) {
+  table_data <- get(table_name)
+  if (nrow(table_data)>0){
+    # Pivot the table
+    pivot_table <- pivot_wider(table_data, 
+                               names_from = "Policy Instrument",
+                               values_from = "Count",
+                               values_fill = 0)  # Fill missing values with 0
+    
+    # Convert the tibble to a data frame
+    pivot_table_df <- as.data.frame(pivot_table)
+    
+    # Add a column with the table name (without "table.subset_")
+    rownames(pivot_table_df) <- gsub("table.subset_", "", table_name)
+    add_table_name <- gsub("table.subset_", "", table_name)
+    # Append the table to the list
+    table_list[[add_table_name]] <- pivot_table_df
+    
+  } else {
+    print("table empty")
+  }
+}
+#Merge them together
+# Merge the tables using bind_rows and create new columns for unique column names
+merged_table <- bind_rows(table_list, .id = "Table_Name")
+# Delete the extra column of names that gets created
+merged_table <- merged_table[, -1]
+# Replace NA values with 0 in the merged table
+merged_table[is.na(merged_table)] <- 0
+#Merge all of the "other" columns together
+# Get the column names containing the word "other"
+other_columns <- grep("other", colnames(merged_table), ignore.case = TRUE)
+# Sum the selected columns
+sum_other_columns <- rowSums(merged_table[, other_columns])
+# Remove the selected columns
+merged_table <- merged_table[, -other_columns]
+merged_table$Other <- sum_other_columns
+# Print the result
+print(sum_other_columns)
+# Display the merged table
+print(merged_table)
+rownames(merged_table)
+merged_table_pol <- merged_table
+
+#Put the tables in the correct format Gov
+# Create an empty list to store the tables
+table_list <- list()
+# Loop through each table name
+for (table_name in table_names_governance) {
+  table_data <- get(table_name)
+  if (nrow(table_data)>0){
+    # Pivot the table
+    pivot_table <- pivot_wider(table_data, 
+                               names_from = "Governance type",
+                               values_from = "Count",
+                               values_fill = 0)  # Fill missing values with 0
+    
+    # Convert the tibble to a data frame
+    pivot_table_df <- as.data.frame(pivot_table)
+    
+    # Add a column with the table name (without "table.subset_")
+    rownames(pivot_table_df) <- gsub("table.subset_", "", table_name)
+    add_table_name <- gsub("table.subset_", "", table_name)
+    # Append the table to the list
+    table_list[[add_table_name]] <- pivot_table_df
+    
+  } else {
+    print("table empty")
+  }
+}
+
+#Merge them together
+# Merge the tables using bind_rows and create new columns for unique column names
+merged_table <- bind_rows(table_list, .id = "Table_Name")
+# Delete the extra column of names that gets created
+merged_table <- merged_table[, -1]
+
+#Use governance_lookup table to reclassify accordingly
+# Loop through column names of merged_table
+for (col_name in names(merged_table[2:nrow(merged_table)])) {
+  # Find the closest matching value in the lookup table
+  closest_match <- find_approximate_match(col_name, governance_lookup$Gov)
+  # Check if a matching value was found
+  if (!is.na(closest_match)) {
+    # Find the index of the matching value in the lookup table
+    index <- which(governance_lookup$Gov == closest_match)
+    # Extract the corresponding replacement value
+    replacement <- governance_lookup$Gov_New[index]
+    # Rename the column in merged_table
+    names(merged_table)[names(merged_table) == col_name] <- replacement
+  }else{
+    print("no match")
+  }
+}
+
+names(merged_table)
+# Find column indices that are NA and delete them
+na_columns <- which(is.na(names(merged_table)))
+# Remove columns with NA labels
+merged_table <- merged_table[, -na_columns]
+
+# Replace NA values with 0 in the merged table
+merged_table[is.na(merged_table)] <- 0
+
+#Merge all of the "other" columns together
+# Get the column names containing the word "other"
+other_columns <- grep("other", colnames(merged_table), ignore.case = TRUE)
+# Sum the selected columns
+sum_other_columns <- rowSums(merged_table[, other_columns])
+# Remove the selected columns
+merged_table <- merged_table[, -other_columns]
+merged_table$Other <- sum_other_columns
+# Print the resulting merged_table
+View(merged_table)
+
+#Merge together the two "Adaptive Governance" columns
+# Get the column names containing the word "other"
+ad_gov <- grep("Adaptive Governance", colnames(merged_table), ignore.case = TRUE)
+# Sum the selected columns
+sum_ad_gov_columns <- rowSums(merged_table[, ad_gov])
+# Remove the selected columns
+merged_table <- merged_table[, -ad_gov]
+merged_table$"Adaptive Governance" <- sum_ad_gov_columns
+merged_table_gov <- merged_table
+
+#Clean up the rownames
+# Remove the prefix "tablegov.subset_" from row names
+rownames(merged_table_gov) <- gsub("tablegov\\.subset_", "", rownames(merged_table_gov))
+rownames(merged_table_pol) <- gsub("tablepol\\.subset_", "", rownames(merged_table_pol))
+
+merged_table_gov$rowname <- rownames(merged_table_gov)
+merged_table_pol$rowname <- rownames(merged_table_pol)
+
+# Rename the 'OldColumnName' to 'NewColumnName'
+merged_table_gov <- merged_table_gov %>%
+  rename(Other_gov = Other)
+# Rename the 'OldColumnName' to 'NewColumnName'
+merged_table_pol <- merged_table_pol %>%
+  rename(Other_pol = Other)
+
+test <- merge(merged_table_gov, merged_table_pol, all = TRUE)
+# Assuming your dataframe is named 'test'
+result_dissolved <- test %>%
+  group_by(rowname) %>%
+  summarize_all(sum, na.rm = TRUE)
+
+# View the dissolved dataframe
+View(result_dissolved)
+# Replace "_" with " " in a specific column 
+result_dissolved$rowname <- gsub("_", " ", result_dissolved$rowname)
+merged_table_remove_names <- result_dissolved
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(result_dissolved)])
+colnames(merged_table_remove_names) <- NULL
+rownames(merged_table_remove_names) <- NULL
+
+# Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
+color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
+
+# Create the heatmap
+# my_plot <- heatmap(
+#   as.matrix(merged_table_remove_names),  # Convert the data to a matrix
+#   col = color_palette,  # Set the color palette
+#   Rowv = NA,  # Do not cluster rows
+#   Colv = NA,  # Do not cluster columns
+#   labRow = result_dissolved$rowname,  # Use the row names
+#   labCol = colnames(result_dissolved[2:11]),  # Use the column names
+#   cexRow = 0.8,  # Adjust the row label size
+#   cexCol = 0.8,  # Adjust the column label size
+#   #margins = c(5, 10),  # Adjust the margins
+#   #main = "Heatmap Title"  # Add a title +
+#   geom_text(aes(label = value))
+# )
+
+#Using pheatmap actually worked better for me!
+heatmap <- pheatmap(as.matrix(merged_table_remove_names), display_numbers = T, number_format = "%.0f", color = colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100), cluster_rows = F, cluster_cols = F, fontsize_number = 12, labels_row = result_dissolved$rowname, labels_col = colnames(result_dissolved[2:ncol(result_dissolved)]), fontsize_row = 8, fontsize_col = 10, angle_col = "45", border_color = NA)
+
+# Save the heatmap to a PNG file
+png("./Heatmap_elements_governance_policy.png", width = 600, height = 600)  # Adjust width and height as needed
+print(heatmap)
+dev.off()  # Close the PNG device
+#Some final touches in ppt
 
 
 

@@ -43,3 +43,11 @@ get_challenge_nexus <- function(X, Y) {
     return(expand_grid(X, Y) %>% rename(NChallenge = names(.)[1], Nexus = names(.)[2]))
   }
 }
+
+# Function to find approximate matches
+find_approximate_match <- function(col_name, lookup_table) {
+  distances <- stringdist::stringdistmatrix(col_name, lookup_table)
+  closest_match_idx <- which.min(distances)
+  closest_match <- lookup_table[closest_match_idx]
+  return(closest_match)
+}
