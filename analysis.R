@@ -41,14 +41,23 @@ Data_Select_Split <- Data_Select_Split %>%
               mutate(Actors = map(Actors, .f = str_squish)) %>%
               mutate(CrossCut = map(CrossCut, .f = str_squish))
 
-# use lookup tables to recategorise nexus challenges, governance, and actors
+# keep "other" category from paper types but remove the term "Other: " from responses
+# - change code here to avoid this or to do something else
+Data_Select_Split <- Data_Select_Split %>% mutate(PaperType = map(PaperType,
+                        .f = function(x) {if (all(is.na(x))) {return(NA)} else
+                          {y <- as_tibble(x) %>% rename(PaperType = value) %>%
+                          mutate(PaperType = ifelse(str_detect(PaperType, fixed("other",
+                                ignore_case = TRUE)), str_remove(PaperType, "Other: "), PaperType));
+                          if (all(is.na(y$PaperType))) {return(as.vector(y$PaperType))} else
+                          {return(as.vector(filter(y, !is.na(PaperType))$PaperType))}
+                        }}))
 
-# nexus challenges
+# recategorise nexus challenges - note that this removes "other" responses - change code here to avoid this or to do something else
 
 # get look up table so as to rename nexus challenges with correct names
 LookupNC <- unique(unlist(Data_Select_Split$NChallenge))[unique(unlist(Data_Select_Split$NChallenge)) %>%
           str_detect(fixed("other", ignore_case = TRUE), negate = TRUE) %>% which()]
-LookupNC <- LookupNC %>% as_tibble() %>% rename(NChallenge = value) %>% mutate(NChallenge_New = NChallenge) %>%
+LookupNC <- LookupNC %>% as_tibble() %>% rename(NChallenge = value) %>% mutate(NChallenge_New = NA) %>%
               mutate(NChallenge_New = case_when(
                 str_detect(NChallenge, "Complexity") ~ "Complexity Challenges",
                 str_detect(NChallenge, "Values") ~ "Values Challenges",
@@ -60,18 +69,66 @@ LookupNC <- LookupNC %>% as_tibble() %>% rename(NChallenge = value) %>% mutate(N
 # write to csv
 write_csv(LookupNC, "nchallenges_lookup.csv")
 
-# rename nexus challenges - note that this removes "other" responses - change code here to avoid this or do something else
+# rename nexus challenges
 Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
                      .f = function(x) {y <- as_tibble(x) %>% left_join(LookupNC, by = join_by(value == NChallenge)) %>% select(-value);
                        if (all(is.na(y$NChallenge_New))) {return(as.vector(y$NChallenge_New))} else
                        {return(as.vector(filter(y, !is.na(NChallenge_New))$NChallenge_New))}}))
 
-# actors
+# recategorise governance appraoches - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
+# note also that this only used governance appraoches listed in Table 4.4 of the chapter - all other govenance appraoches are ignored
+
+# get look up table so as to rename governance types
+LookupGov <- unique(unlist(Data_Select_Split$Gov)) %>% as_tibble() %>%
+                mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE))) %>%
+                mutate(value = str_squish(value)) %>% mutate(value = str_split(value, ",")) %>%
+                mutate(value = map(value, .f = str_squish))
+LookupGov <-  unique(unlist(LookupGov$value)) %>% as_tibble() %>%
+                rename(Gov = value) %>% mutate(Gov_New = NA) %>% mutate(Gov_New = case_when(
+                  str_detect(Gov, fixed("hierarchical", ignore_case = TRUE)) ~ "Hierarchical Governance",
+                  str_detect(Gov, fixed("market", ignore_case = TRUE)) ~ "Market Governance",
+                  str_detect(Gov, fixed("network", ignore_case = TRUE)) ~ "Network Governance",
+                  str_detect(Gov, fixed("good", ignore_case = TRUE)) ~ "Good Governance",
+                  str_detect(Gov, fixed("multi-level", ignore_case = TRUE)) ~ "Multi-level Governance",
+                  str_detect(Gov, fixed("multilevel", ignore_case = TRUE)) ~ "Multi-level Governance",
+                  str_detect(Gov, fixed("community", ignore_case = TRUE)) ~ "Community Governance",
+                  str_detect(Gov, fixed("transformative", ignore_case = TRUE)) ~ "Transformative Governance",
+                  str_detect(Gov, fixed("polycentric", ignore_case = TRUE)) ~ "Polycentric Governance",
+                  str_detect(Gov, fixed("nested", ignore_case = TRUE)) ~ "Hierarchical Governance",
+                  str_detect(Gov, fixed("reflexive", ignore_case = TRUE)) ~ "Reflexive Governance",
+                  str_detect(Gov, fixed("adaptive", ignore_case = TRUE)) ~ "Adaptive Governance"
+                ))
+
+# write to csv
+write_csv(LookupGov, "governance_lookup.csv")
+
+# rename governance types
+Data_Select_Split <- Data_Select_Split %>% mutate(Gov = map(Gov,
+                     .f = function(x) {y <- as_tibble(x) %>%
+                        mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE))) %>%
+                        mutate(value = str_squish(value)) %>% mutate(value = str_split(value, ",")) %>%
+                        mutate(value = map(value, .f = str_squish)); y <- unlist(y) %>% as_tibble() %>%
+                        left_join(LookupGov, by = join_by(value == Gov)) %>% select(-value);
+                        if (all(is.na(y$Gov_New))) {return(as.vector(y$Gov_New))} else
+                          {return(as.vector(filter(y, !is.na(Gov_New))$Gov_New))}
+                     }))
+
+# remove "other" category from policy instruments - change code here to avoid this or to do something else
+Data_Select_Split <- Data_Select_Split %>% mutate(Policy = map(Policy,
+                        .f = function(x) {if (all(is.na(x))) {return(NA)} else
+                          {y <- as_tibble(x) %>% rename(Policy = value) %>%
+                          mutate(Policy = ifelse(str_detect(Policy, fixed("other",
+                                                                                ignore_case = TRUE)), NA, Policy));
+                          if (all(is.na(y$Policy))) {return(as.vector(y$Policy))} else
+                          {return(as.vector(filter(y, !is.na(Policy))$Policy))}
+                        }}))
+
+# recategorise actors - note that this removes "other" responses - change code here to avoid this or to do something else
 
 # get look up table so as to rename actors with new actor categories
 LookupAct <- unique(unlist(Data_Select_Split$Actors))[unique(unlist(Data_Select_Split$Actors)) %>%
           str_detect(fixed("other", ignore_case = TRUE), negate = TRUE) %>% which()]
-LookupAct <- LookupAct %>% as_tibble() %>% rename(Actors = value) %>% mutate(Actors_New = Actors) %>%
+LookupAct <- LookupAct %>% as_tibble() %>% rename(Actors = value) %>% mutate(Actors_New = NA) %>%
               mutate(Actors_New = case_when(
                 str_detect(Actors, "Private") ~ "Private Sector and Business Organisations",
                 str_detect(Actors, "Funders") ~ "Financial Institutions",
@@ -88,18 +145,76 @@ LookupAct <- LookupAct %>% as_tibble() %>% rename(Actors = value) %>% mutate(Act
 # write to csv
 write_csv(LookupAct, "actors_lookup.csv")
 
-# rename actors - note that this removes "other" responses - change code here to avoid this or do something else
+# rename actors
 Data_Select_Split <- Data_Select_Split %>% mutate(Actors = map(Actors,
                      .f = function(x) {y <- as_tibble(x) %>% left_join(LookupAct, by = join_by(value == Actors)) %>% select(-value);
                        if (all(is.na(y$Actors_New))) {return(as.vector(y$Actors_New))} else
                        {return(as.vector(filter(y, !is.na(Actors_New))$Actors_New))}}))
 
-# governance - STILL TO FINISH THIS
+# recategorise cross-cutting issues - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
 
 # get look up table so as to rename governance types
-LookupGov <- unique(unlist(Data_Select_Split$Gov)) %>% as_tibble() %>%
-                mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE)) %>%
-                  str_squish() %>% str_split(","))
+LookupCC <- unique(unlist(Data_Select_Split$CrossCut)) %>% as_tibble() %>%
+                mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE))) %>%
+                mutate(value = str_squish(value)) %>% mutate(value = str_split(value, ",")) %>%
+                mutate(value = map(value, .f = str_squish))
+LookupCC <-  unique(unlist(LookupCC$value)) %>% as_tibble() %>%
+                rename(CrossCut = value) %>% mutate(CrossCut_New = NA) %>% mutate(CrossCut_New = case_when(
+                  str_detect(CrossCut, fixed("equity", ignore_case = TRUE)) ~ "Equity",
+                  str_detect(CrossCut, fixed("poverty", ignore_case = TRUE)) ~ "Poverty",
+                  str_detect(CrossCut, fixed("economic", ignore_case = TRUE)) ~ "Economy",
+                  str_detect(CrossCut, fixed("employment", ignore_case = TRUE)) ~ "Employment",
+                  str_detect(CrossCut, fixed("indigenous", ignore_case = TRUE)) ~ "ILK",
+                  str_detect(CrossCut, fixed("education", ignore_case = TRUE)) ~ "Education",
+                  str_detect(CrossCut, fixed("energy", ignore_case = TRUE)) ~ "Energy",
+                  str_detect(CrossCut, fixed("mining", ignore_case = TRUE)) ~ "Mining",
+                  str_detect(CrossCut, fixed("waste", ignore_case = TRUE)) ~ "Waste",
+                  str_detect(CrossCut, fixed("peace", ignore_case = TRUE)) ~ "Armed Conflict",
+                  str_detect(CrossCut, fixed("transport", ignore_case = TRUE)) ~ "Infrastructure",
+                  str_detect(CrossCut, fixed("trade", ignore_case = TRUE)) ~ "Trade",
+                  str_detect(CrossCut, fixed("justice", ignore_case = TRUE)) ~ "Justice",
+                  str_detect(CrossCut, fixed("land", ignore_case = TRUE)) &
+                    !str_detect(CrossCut, fixed("policy landscape", ignore_case = TRUE))  ~ "Land",
+                  str_detect(CrossCut, fixed("LULC", ignore_case = TRUE)) ~ "Land",
+                  str_detect(CrossCut, fixed("gender", ignore_case = TRUE)) ~ "Gender",
+                  str_detect(CrossCut, fixed("political", ignore_case = TRUE)) ~ "Politics and Democracy",
+                  str_detect(CrossCut, fixed("security", ignore_case = TRUE)) ~ "Security",
+                  str_detect(CrossCut, fixed("tourism", ignore_case = TRUE)) ~ "Tourism",
+                  str_detect(CrossCut, fixed("resilience", ignore_case = TRUE)) ~ "Resilience",
+                  str_detect(CrossCut, fixed("social cohesion", ignore_case = TRUE)) ~ "Social Cohesion",
+                  str_detect(CrossCut, fixed("power", ignore_case = TRUE)) ~ "Power Dynamics",
+                  str_detect(CrossCut, fixed("energy", ignore_case = TRUE)) ~ "Energy",
+                  str_detect(CrossCut, fixed("emergency response", ignore_case = TRUE)) ~ "Disaster Recovery",
+                  str_detect(CrossCut, fixed("infrastructure", ignore_case = TRUE)) ~ "Infrastructure",
+                  str_detect(CrossCut, fixed("flood recovery", ignore_case = TRUE)) ~ "Disaster Recovery",
+                  str_detect(CrossCut, fixed("emergency response", ignore_case = TRUE)) ~ "Disaster Recovery",
+                  str_detect(CrossCut, fixed("population growth", ignore_case = TRUE)) ~ "Population Growth",
+                  str_detect(CrossCut, fixed("corruption", ignore_case = TRUE)) ~ "Corruption",
+                  str_detect(CrossCut, fixed("livelihoods", ignore_case = TRUE)) ~ "Livelihoods",
+                  str_detect(CrossCut, fixed("urbanization", ignore_case = TRUE)) ~ "Urbanisation",
+                  str_detect(CrossCut, fixed("migration", ignore_case = TRUE)) ~ "Migration",
+                  str_detect(CrossCut, fixed("soil", ignore_case = TRUE)) ~ "Land",
+                  str_detect(CrossCut, fixed("safety", ignore_case = TRUE)) ~ "Security",
+                  str_detect(CrossCut, fixed("services", ignore_case = TRUE)) ~ "Infrastructure",
+                  str_detect(CrossCut, fixed("civil rights", ignore_case = TRUE)) ~ "Civil Rights",
+                  str_detect(CrossCut, fixed("democracy", ignore_case = TRUE)) ~ "Politics and Democracy",
+                  str_detect(CrossCut, fixed("rule of law", ignore_case = TRUE)) ~ "Rule of Law",
+                  str_detect(CrossCut, fixed("policy landscape", ignore_case = TRUE)) ~ "Politics and Democracy"
+                ))
+
+# write to csv
+write_csv(LookupCC, "crosscut_lookup.csv")
+
+# rename cross-cutting issue types
+Data_Select_Split <- Data_Select_Split %>% mutate(CrossCut = map(CrossCut,
+                     .f = function(x) {y <- as_tibble(x) %>%
+                        mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE))) %>%
+                        mutate(value = str_squish(value)) %>% mutate(value = str_split(value, ",")) %>%
+                        mutate(value = map(value, .f = str_squish)); y <- unlist(y) %>% as_tibble() %>%
+                        left_join(LookupCC, by = join_by(value == CrossCut)) %>% select(-value);
+                        if (all(is.na(y$CrossCut_New))) {return(as.vector(y$CrossCut_New))} else
+                          {return(as.vector(filter(y, !is.na(CrossCut_New))$CrossCut_New))}
+                     }))
 
 # summarise paper types
 
@@ -190,12 +305,12 @@ write_csv(NumNexuses, "num_nexuses_counts.csv")
 # get median number of nexus elements considered
 Data_Select_Split$Nexus %>% map(.f = function (x)
       {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
-      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, median, na.rm = TRUE))
+      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, \(x) median(x, na.rm = TRUE)))
 
 # get mean number of nexus elements considered
 Data_Select_Split$Nexus %>% map(.f = function (x)
       {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
-      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, mean, na.rm = TRUE))
+      as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, \(x) mean(x, na.rm = TRUE)))
 
 # get alluvial plot of nexus challenges versus nexus elements
 

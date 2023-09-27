@@ -1,0 +1,63 @@
+CrossCut,CrossCut_New
+Equity,Equity
+Poverty,Poverty
+Economic growth,Economy
+Employment,Employment
+Indigenous values and knowledge,ILK
+Education,Education
+Energy,Energy
+Mining,Mining
+Waste,Waste
+peace,Armed Conflict
+transport,Infrastructure
+trade,Trade
+resources consumption,NA
+justice,Justice
+strong institutions,NA
+Land,Land
+capital,NA
+NA,NA
+LULC,Land
+gender,Gender
+Political security,Politics and Democracy
+Trade,Trade
+Security,Security
+procedural justice,Justice
+Research,NA
+Political instability,Politics and Democracy
+Gender,Gender
+Tourism,Tourism
+resilience,Resilience
+social cohesion,Social Cohesion
+Soi,NA
+Power relations,Power Dynamics
+Emergency response,Disaster Recovery
+Infrastructure,Infrastructure
+Public health,NA
+Flood recovery,Disaster Recovery
+population growth,Population Growth
+corruption,Corruption
+Livelihoods,Livelihoods
+,NA
+Urbanization,Urbanisation
+migration,Migration
+Soil,Land
+Safety,Security
+power dynamics,Power Dynamics
+services,Infrastructure
+Land and tourism,Land
+Authors also control for other city-level socioeconomic factors,Economy
+including population density (to indicate vulnerability) and wheter a city is considerer to be a world city or a capital city. In addition,NA
+authors incorporated country-level variables,NA
+such as years in the EU,NA
+civil liberty status,NA
+level of renewable energy adoption,Energy
+climate change awareness,NA
+and GDP growth.,NA
+Technology,NA
+civil rights,Civil Rights
+democracy,Politics and Democracy
+rule of law,Rule of Law
+Migration,Migration
+livelihoods,Livelihoods
+Policyscape (policy landscape),Politics and Democracy
