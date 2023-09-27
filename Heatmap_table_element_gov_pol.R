@@ -280,14 +280,16 @@ dev.off()  # Close the PNG device
 
 
 #Code to create figure 4.17 Nexus challenges, Nexus elements, and cross-cutting issues
+crosscut_lookup <- read.csv("./crosscut_lookup.csv") 
+
 # Define the list of elements
 elements <- c("Biodiversity", "Climate", "Health", "Food", "Water")
 # Generate all possible combinations of elements
 all_combinations <- unlist(sapply(1:length(elements), function(n) combn(elements, n, paste, collapse = "; ")))
 
 #Need to use this later on for merging the generated tables together
-table_names_challenges <- c()
-table_names_cross_cutting_issues <- c()
+table_names_chal <- c()
+table_names_crosscut <- c()
 #combo <- all_combinations[2:2]
 # Create and name dataframes for each combination
 for (combo in all_combinations) {
@@ -304,52 +306,52 @@ for (combo in all_combinations) {
   # print(head(get(df_name)))
   df <- get(df_name)
   # Extract the columns of interest
-  column_data_policy <- df$`What.type.of.policy.instruments.are.considered.to.operationalise.the.response.options.proposed.or.assessed.`
-  column_data_governance <- df$Are.any.of.the.following.governance.approaches.proposed.or.assessed.as.solutions.to.the.above.nexus.challenges..Use.your.judgement.to.select.one.of.the.four.governance.approaches.listed.and.then.use.the..other..category.to.list.any.specific.governance.approaches.referred.to.in.the.study..separate.multiple.governance.approaches.with.....
+  column_data_chal <- df$"Does.the.study.provide.evidence.for.addressing.any.of.the.following.nexus.challenges."
+  column_data_crosscut <- df$"Which.of.the.following.cross.cutting.issues.are.considered." 
   # Split the elements in each row by semicolon
-  split_elements_policy <- strsplit(column_data_policy, "; ")
-  split_elements_governance <- strsplit(column_data_governance, "; ")
+  split_elements_chal <- strsplit(column_data_chal, "; ")
+  split_elements_crosscut<- strsplit(column_data_crosscut, "; ")
   # Flatten the list of split elements
-  all_elements_policy <- unlist(split_elements_policy)
-  all_elements_governance <- unlist(split_elements_governance)
+  all_elements_chal <- unlist(split_elements_chal)
+  all_elements_crosscut <- unlist(split_elements_crosscut)
   
   # Create a frequency table for policy
-  table_result_policy <- table(all_elements_policy)
-  table_df_policy <- as.data.frame(table_result_policy)
+  table_result_chal <- table(all_elements_chal)
+  table_df_chal <- as.data.frame(table_result_chal)
   
-  if (nrow(table_df_policy)>0){
+  if (nrow(table_df_chal)>0){
     # Convert the frequency table to a data frame
     # Rename the columns for clarity
-    colnames(table_df_policy) <- c("Policy Instrument", "Count")
+    colnames(table_df_chal) <- c("Challenge", "Count")
   } else{
-    table_df_policy <- table_df_policy
+    table_df_policy <- table_df_chal
   }
   # Define the name for the table as "table." followed by df_name
-  table_name_pol <- paste("tablepol.", df_name, sep = "")
+  table_name_chal <- paste("tablechal.", df_name, sep = "")
   # Assign the table to the name
-  assign(table_name_pol, table_df_policy)
+  assign(table_name_chal, table_df_chal)
   # Display the resulting table
-  print(table_df_policy)
-  table_names_policy <- c(table_names_policy, table_name_pol)
+  print(table_df_chal)
+  table_names_chal <- c(table_names_chal, table_name_chal)
   
   # Create a frequency table for policy
-  table_result_governance <- table(all_elements_governance)
-  table_df_governance <- as.data.frame(table_result_governance)
+  table_result_crosscut <- table(all_elements_crosscut)
+  table_df_crosscut <- as.data.frame(table_result_crosscut)
   
-  if (nrow(table_df_governance)>0){
+  if (nrow(table_df_crosscut)>0){
     # Convert the frequency table to a data frame
     # Rename the columns for clarity
-    colnames(table_df_governance) <- c("Governance type", "Count")
+    colnames(table_df_crosscut) <- c("Cross cutting issue", "Count")
   } else{
-    table_df_governance <- table_df_governance
+    table_df_crosscut <- table_df_crosscut
   }
   # Define the name for the table as "table." followed by df_name
-  table_name_gov <- paste("tablegov.", df_name, sep = "")
+  table_name_crosscut <- paste("tablecrosscut.", df_name, sep = "")
   # Assign the table to the name
-  assign(table_name_gov, table_df_governance)
+  assign(table_name_crosscut, table_df_crosscut)
   # Display the resulting table
-  print(table_df_governance)
-  table_names_governance <- c(table_names_governance, table_name_gov)
+  print(table_df_crosscut)
+  table_names_crosscut <- c(table_names_crosscut, table_name_crosscut)
 }
 
 
@@ -358,12 +360,12 @@ for (combo in all_combinations) {
 table_list <- list()
 
 # Loop through each table name
-for (table_name in table_names_policy) {
+for (table_name in table_names_chal) {
   table_data <- get(table_name)
   if (nrow(table_data)>0){
     # Pivot the table
     pivot_table <- pivot_wider(table_data, 
-                               names_from = "Policy Instrument",
+                               names_from = "Challenge",
                                values_from = "Count",
                                values_fill = 0)  # Fill missing values with 0
     
@@ -400,18 +402,18 @@ print(sum_other_columns)
 # Display the merged table
 print(merged_table)
 rownames(merged_table)
-merged_table_pol <- merged_table
+merged_table_chal <- merged_table
 
 #Put the tables in the correct format Gov
 # Create an empty list to store the tables
 table_list <- list()
 # Loop through each table name
-for (table_name in table_names_governance) {
+for (table_name in table_names_crosscut) {
   table_data <- get(table_name)
   if (nrow(table_data)>0){
     # Pivot the table
     pivot_table <- pivot_wider(table_data, 
-                               names_from = "Governance type",
+                               names_from = "Cross cutting issue",
                                values_from = "Count",
                                values_fill = 0)  # Fill missing values with 0
     
@@ -444,22 +446,24 @@ find_approximate_match <- function(col_name, lookup_table) {
   return(closest_match)
 }
 
+
 # Loop through column names of merged_table
 for (col_name in names(merged_table[2:nrow(merged_table)])) {
   # Find the closest matching value in the lookup table
-  closest_match <- find_approximate_match(col_name, governance_lookup$Gov)
+  closest_match <- find_approximate_match(col_name, crosscut_lookup$CrossCut)
   # Check if a matching value was found
   if (!is.na(closest_match)) {
     # Find the index of the matching value in the lookup table
-    index <- which(governance_lookup$Gov == closest_match)
+    index <- which(crosscut_lookup$CrossCut == closest_match)
     # Extract the corresponding replacement value
-    replacement <- governance_lookup$Gov_New[index]
+    replacement <- crosscut_lookup$CrossCut_New[index]
     # Rename the column in merged_table
     names(merged_table)[names(merged_table) == col_name] <- replacement
   }else{
     print("no match")
   }
 }
+
 
 names(merged_table)
 # Find column indices that are NA and delete them
@@ -481,32 +485,74 @@ merged_table$Other <- sum_other_columns
 # Print the resulting merged_table
 View(merged_table)
 
-#Merge together the two "Adaptive Governance" columns
-# Get the column names containing the word "other"
-ad_gov <- grep("Adaptive Governance", colnames(merged_table), ignore.case = TRUE)
-# Sum the selected columns
-sum_ad_gov_columns <- rowSums(merged_table[, ad_gov])
-# Remove the selected columns
-merged_table <- merged_table[, -ad_gov]
-merged_table$"Adaptive Governance" <- sum_ad_gov_columns
-merged_table_gov <- merged_table
+#Merge together the duplicate columns
+#Land
+# List of column names to be combined
+columns_to_combine <- c("Land.1", "Land")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$Land <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Land.1")]
+#Migration
+# List of column names to be combined
+columns_to_combine <- c("Migration.1", "Migration")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$Migration <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Migration.1")]
+#Politics and Democracy
+# List of column names to be combined
+columns_to_combine <- c("Politics and Democracy.1", "Politics and Democracy")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$"Politics and Democracy" <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Politics and Democracy.1")]
+#Security
+# List of column names to be combined
+columns_to_combine <- c("Security.1", "Security")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$Security <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Security.1")]
+#Waste
+# List of column names to be combined
+columns_to_combine <- c("Waste.1", "Waste")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$Waste <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Waste.1")]
+#Power Dynamics
+# List of column names to be combined
+columns_to_combine <- c("Power Dynamics.1", "Power Dynamics")
+# Create a new column "Land" that is the sum of selected columns
+merged_table$"Power Dynamics" <- rowSums(merged_table[columns_to_combine], na.rm = TRUE)
+# Remove the original columns that were summed
+merged_table <- merged_table[, !(names(merged_table) %in% "Power Dynamics.1")]
+merged_table_crosscut <- merged_table
 
 #Clean up the rownames
 # Remove the prefix "tablegov.subset_" from row names
-rownames(merged_table_gov) <- gsub("tablegov\\.subset_", "", rownames(merged_table_gov))
-rownames(merged_table_pol) <- gsub("tablepol\\.subset_", "", rownames(merged_table_pol))
+rownames(merged_table_chal) <- gsub("tablechal\\.subset_", "", rownames(merged_table_chal))
+rownames(merged_table_crosscut) <- gsub("tablecrosscut\\.subset_", "", rownames(merged_table_crosscut))
 
-merged_table_gov$rowname <- rownames(merged_table_gov)
-merged_table_pol$rowname <- rownames(merged_table_pol)
+merged_table_chal$rowname <- rownames(merged_table_chal)
+merged_table_crosscut$rowname <- rownames(merged_table_crosscut)
 
 # Rename the 'OldColumnName' to 'NewColumnName'
-merged_table_gov <- merged_table_gov %>%
-  rename(Other_gov = Other)
-# Rename the 'OldColumnName' to 'NewColumnName'
-merged_table_pol <- merged_table_pol %>%
-  rename(Other_pol = Other)
+merged_table_chal <- merged_table_chal %>%
+  rename(Other_chal = Other)
 
-test <- merge(merged_table_gov, merged_table_pol, all = TRUE)
+# Define new column names
+#Look up table doesnt quite match, have hard coded for now
+new_column_names <- c("Values Challenges", "Governance Challenges", "Scaling Challenges", "Complexity Challenges", "Financing Challenges", "Other", "rowname")
+# Rename the columns
+colnames(merged_table_chal) <- new_column_names
+
+# Rename the 'OldColumnName' to 'NewColumnName'
+# merged_table_crosscut <- merged_table_crosscut %>%
+#   rename(Other_crosscut = Other)
+
+test <- merge(merged_table_chal, merged_table_crosscut, all = TRUE)
 # Assuming your dataframe is named 'test'
 result_dissolved <- test %>%
   group_by(rowname) %>%
@@ -540,10 +586,10 @@ color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
 # )
 
 #Using pheatmap actually worked better for me!
-heatmap <- pheatmap(as.matrix(merged_table_remove_names), display_numbers = T, number_format = "%.0f", color = colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100), cluster_rows = F, cluster_cols = F, fontsize_number = 12, labels_row = result_dissolved$rowname, labels_col = colnames(result_dissolved[2:ncol(result_dissolved)]), fontsize_row = 8, fontsize_col = 10, angle_col = "45", border_color = NA)
+heatmap <- pheatmap(as.matrix(merged_table_remove_names), display_numbers = T, number_format = "%.0f", color = colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100), cluster_rows = F, cluster_cols = F, fontsize_number = 24, labels_row = result_dissolved$rowname, labels_col = colnames(result_dissolved[2:ncol(result_dissolved)]), fontsize_row = 8, fontsize_col = 10, angle_col = "45", border_color = NA)
 
 # Save the heatmap to a PNG file
-png("./heatmap_gov_policy.png", width = 600, height = 600)  # Adjust width and height as needed
+png("./heatmap_chal_crosscut.png", width = 1200, height = 1200)  # Adjust width and height as needed
 print(heatmap)
 dev.off()  # Close the PNG device
 
