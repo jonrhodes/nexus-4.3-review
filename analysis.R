@@ -1,15 +1,15 @@
 # load packages
 library(tidyverse)
 library(ggalluvial)
-library(dplyr)
-library(stringr)
+#library(dplyr)
+#library(stringr)
 library(gplots)
-library(tidyr)
+#library(tidyr)
 library(pheatmap)
 library(stringdist)
 library(sf)
 library(RColorBrewer)
-library(ggplot2)
+#library(ggplot2)
 
 # load functions
 source("functions.R")
@@ -162,7 +162,7 @@ Data_Select_Split <- Data_Select_Split %>% mutate(Actors = map(Actors,
 
 # recategorise cross-cutting issues - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
 
-# get look up table so as to rename governance types
+# get look up table so as to rename cross cutting issue types
 LookupCC <- unique(unlist(Data_Select_Split$CrossCut)) %>% as_tibble() %>%
                 mutate(value = str_remove(value, fixed("other: ", ignore_case = TRUE))) %>%
                 mutate(value = str_squish(value)) %>% mutate(value = str_split(value, ",")) %>%
@@ -294,14 +294,14 @@ NChallenges <- unlist(Data_Select_Split$NChallenge) %>% as_tibble() %>%
 # write to csv
 write_csv(NChallenges, "nchallenges_counts.csv")
 
-# summarise nexus elements -  remove "Other" responses
+# summarise nexus elements -  remove "other" responses
 
-# get counts of each nexus elements
+# get counts of each nexus element
 Nexuses <- unlist(Data_Select_Split$Nexus) %>% as_tibble() %>%
       mutate(Nexus = value) %>% count(Nexus)
 
 # write to csv
-write_csv(NChallenges, "nexuses_counts.csv")
+write_csv(Nexuses, "nexuses_counts.csv")
 
 # get counts of the numbers of nexus elements considered
 NumNexuses <- Data_Select_Split$Nexus %>% map(.f = function (x)
@@ -320,6 +320,24 @@ Data_Select_Split$Nexus %>% map(.f = function (x)
 Data_Select_Split$Nexus %>% map(.f = function (x)
       {ifelse((length(x) == 1) & is.na(x[1]), NA, length(x))}) %>% unlist() %>%
       as_tibble() %>% mutate(NumNexus = value) %>% summarise(across(NumNexus, \(x) mean(x, na.rm = TRUE)))
+
+# summarise governance types
+
+# get counts of each governace type considered
+Govs <- unlist(Data_Select_Split$Gov) %>% as_tibble() %>%
+      mutate(Gov = value) %>% count(Gov)
+
+# write to csv
+write_csv(Govs, "governances_counts.csv")
+
+# summarise policy instruments
+
+# get counts of each polcy instrument considered
+Policies <- unlist(Data_Select_Split$Policy) %>% as_tibble() %>%
+      mutate(Policy = value) %>% count(Policy)
+
+# write to csv
+write_csv(Policies, "policies_counts.csv")
 
 # create some plots
 
@@ -366,6 +384,13 @@ Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(4, 5, 7, 2, 6
 Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
 
 # GOT TO HERE - WILL CONTINUE TOMORROW
+
+# crosstab of governance approaches versus policy instruments
+Test1 <- get_crosstab(Data_Select_Split, "Gov", "Policy", Merge1 = FALSE, Merge2 = FALSE)
+# crosstab of governance approaches versus mexus elements (nexus elements merged)
+Test2 <- get_crosstab(Data_Select_Split, "Gov", "Nexus", Merge1 = FALSE, Merge2 = TRUE)
+# crosstab of governance approaches versus mexus elements (nexus elements not merged)
+Test3 <- get_crosstab(Data_Select_Split, "Gov", "Nexus", Merge1 = FALSE, Merge2 = FALSE)
 
 Matrix_List <- list()
 # loop through unique challenges and get governance types and policy instruments combinations
@@ -424,8 +449,6 @@ ggplot(PlotData, aes(`Policy Instrument`, Governance, col = n, fill = n, label =
    scale_fill_gradientn(colours = c("grey", "yellow", "red"), limits = c(0, 5)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
 
 ggsave("Template.jpg", width = 10, height = 10, units = "cm")
-
-
 
 #Code to create figure 4.11 - Geographic distribution of studies
 #Can download shp file here (not official UN data): https://thematicmapping.org/downloads/world_borders.php
