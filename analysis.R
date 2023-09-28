@@ -343,7 +343,7 @@ write_csv(Policies, "policies_counts.csv")
 
 # get alluvial plot of nexus challenges versus nexus elements
 
-# get all combinations of nexus challenges and nexus elementsd for each study
+# get all combinations of nexus challenges and nexus elements for each study
 Challenges_Nexuses <- Data_Select_Split$NChallenge %>% map2(Data_Select_Split$Nexus,
                        .f = get_challenge_nexus) %>% map(.f = function(x) {
                          y <- length(unique(x$Nexus));
@@ -384,13 +384,6 @@ Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(4, 5, 7, 2, 6
 Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
 
 # GOT TO HERE - WILL CONTINUE TOMORROW
-
-# crosstab of governance approaches versus policy instruments
-Test1 <- get_crosstab(Data_Select_Split, "Gov", "Policy", Merge1 = FALSE, Merge2 = FALSE)
-# crosstab of governance approaches versus mexus elements (nexus elements merged)
-Test2 <- get_crosstab(Data_Select_Split, "Gov", "Nexus", Merge1 = FALSE, Merge2 = TRUE)
-# crosstab of governance approaches versus mexus elements (nexus elements not merged)
-Test3 <- get_crosstab(Data_Select_Split, "Gov", "Nexus", Merge1 = FALSE, Merge2 = FALSE)
 
 Matrix_List <- list()
 # loop through unique challenges and get governance types and policy instruments combinations
