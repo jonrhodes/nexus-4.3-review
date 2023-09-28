@@ -6,8 +6,8 @@
 # Var2 = name of variable 2 (a character string)
 # Merge1 = TRUE/FALSE - whether to merge text string for Var1 for a given study together (e.g., for nexus elements) (optional and defaults to FALSE)
 # Merge2 = TRUE/FALSE - whether to merge text string for Var2 for a given study together (e.g., for nexus elements) (optional and defaults to FALSE)
-# Factors1 = optional argument to define factor levels for Var1 (either blank or specified factor levels)
-# Factors2 = optional argument to define factor levels for Var1 (either blank or specified factor levels)
+# Factors1 = optional argument to define factor levels for Var1 (either blank or a character vector of required factor levels)
+# Factors2 = optional argument to define factor levels for Var1 (either blank or a character vector of required factor levels)
 get_crosstab <- function(Data, Var1, Var2, Merge1 = FALSE, Merge2 = FALSE, Factors1 = NA, Factors2 = NA) {
   Output <- map2(Data[[Var1]], Data[[Var2]], .f = function(x, y) {
             if (all(is.na(x)) | all(is.na(y))) {

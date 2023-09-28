@@ -372,13 +372,13 @@ ggsave("challenges_nexus_alluvial.jpg", width = 20, height = 10, units = "cm")
 
 # create heatmap plots for figure on governance, policy instruments, and nexus challenges
 
-# get unique nexus challenges
+# get all unique nexus challenges
 Unique_Challenges <- sort(unique(unlist(Data_Select_Split$NChallenge)))[c(1, 3, 5, 4, 2)]
 
-# get unique governance types
+# get all unique governance types
 Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(4, 5, 7, 2, 6, 8, 10, 1, 9, 3)]
 
-# get unique policy instruments
+# get all unique policy instruments
 Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
 
 Matrix_List <- list()
