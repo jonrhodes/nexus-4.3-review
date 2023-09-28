@@ -6,10 +6,12 @@
 # Var2 = name of variable 2 (a character string)
 # Merge1 = TRUE/FALSE - whether to merge text string for Var1 for a given study together (e.g., for nexus elements) (optional and defaults to FALSE)
 # Merge2 = TRUE/FALSE - whether to merge text string for Var2 for a given study together (e.g., for nexus elements) (optional and defaults to FALSE)
-get_crosstab <- function(Data, Var1, Var2, Merge1 = FALSE, Merge2 = FALSE) {
+# Factors1 = optional argument to define factor levels for Var1 (either blank or specified factor levels)
+# Factors2 = optional argument to define factor levels for Var1 (either blank or specified factor levels)
+get_crosstab <- function(Data, Var1, Var2, Merge1 = FALSE, Merge2 = FALSE, Factors1 = NA, Factors2 = NA) {
   Output <- map2(Data[[Var1]], Data[[Var2]], .f = function(x, y) {
             if (all(is.na(x)) | all(is.na(y))) {
-              return(as_tibble_row(setNames(rep(NA_character_, 2), c(Var1, Var2))))
+              return(as_tibble_row(setNames(rep(NA_character_, 2), c("Name1", "Name2"))))
             } else {
               if (Merge1 == FALSE) {
                 Data1 <- x %>% as_tibble() %>% rename(Name1 = value) %>% filter(!is.na(Name1))
@@ -24,12 +26,22 @@ get_crosstab <- function(Data, Var1, Var2, Merge1 = FALSE, Merge2 = FALSE) {
                     as_tibble() %>% rename(Name2 = value) %>% filter(!is.na(Name2))
               }
               Cross <- crossing(Data1, Data2)
-              names(Cross) <- c(Var1, Var2)
               return(Cross)
             }})
 
   Output <- do.call(bind_rows, Output)
   Output <- Output[which(!is.na(Output[,1])),]
+  if (all(is.na(Factors1))) {
+    Output <- Output %>% mutate(Name1 = factor(Name1))
+  } else {
+    Output <- Output %>% mutate(Name1 = factor(Name1, levels = Factors1))
+  }
+  if (all(is.na(Factors2))) {
+    Output <- Output %>% mutate(Name2 = factor(Name2))
+  } else {
+    Output <- Output %>% mutate(Name2 = factor(Name2, levels = Factors2))
+  }
+  names(Output) <- c(Var1, Var2)
   Output <- Output %>% table()
   return(Output)
 }

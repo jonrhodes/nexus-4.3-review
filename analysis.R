@@ -372,8 +372,6 @@ ggsave("challenges_nexus_alluvial.jpg", width = 20, height = 10, units = "cm")
 
 # create heatmap plots for figure on governance, policy instruments, and nexus challenges
 
-# GET OCCURENCE OF GOVERNANCE AND POLICY INSTRUMENTS FOR EACH NEXUS CHALLENGE
-
 # get unique nexus challenges
 Unique_Challenges <- sort(unique(unlist(Data_Select_Split$NChallenge)))[c(1, 3, 5, 4, 2)]
 
@@ -383,27 +381,17 @@ Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(4, 5, 7, 2, 6
 # get unique policy instruments
 Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
 
-# GOT TO HERE - WILL CONTINUE TOMORROW
-
 Matrix_List <- list()
 # loop through unique challenges and get governance types and policy instruments combinations
 for (i in 1:length(Unique_Challenges)) {
 
   # get rows in data that match this challenge
-  ThisChallenge <- unlist(Data_Select_Split$NChallenge)
-
-
-  ThisChallenge <- unlist(map(Data_New$NChallenge, .f = check_challenge, Chall = Unique_Challenges[i], ChallLookup = Lookup))
-  Data_This_Challenge <- Data_New[ThisChallenge, ]
+  ThisChallenge <- Data_Select_Split[which(unlist(Data_Select_Split$NChallenge %>% map(.f = function(x) {return(any(x == Unique_Challenges[i]))}))),]
 
   # get the cross-tabbed matrix of governance approaches versus policy intruments for this challenge
-  Matrix_List[[i]] <- bind_rows(map2(Data_This_Challenge$Gov, Data_This_Challenge$Policy, .f = get_crossed, Names = c("Governance", "Policy Instrument")))
-
   # ensure missing categories are included by using factors
-  Matrix_List[[i]] <- Matrix_List[[i]] %>% mutate(Governance = factor(Governance, levels = rev(Unique_Governance)), `Policy Instrument` = factor(`Policy Instrument`, levels = Unique_Policy))
-
-  # create cross-tabulated data
-  Matrix_List[[i]] <- Matrix_List[[i]] %>% table()
+  Matrix_List[[i]] <- get_crosstab(Data = ThisChallenge, Var1 = "Gov", Var2 = "Policy", Merge1 = FALSE,
+                        Merge2 = FALSE, Factors1 = rev(Unique_Governance), Factors2 = Unique_Policy)
 }
 
 # give list entries names
@@ -412,34 +400,34 @@ names(Matrix_List) <- Unique_Challenges
 # loop through list and save plots
 for (i in 1:length(Unique_Challenges)) {
 
-  PlotData <- as_tibble(Matrix_List[[i]]) %>% mutate(Governance = factor(Governance, levels = rev(Unique_Governance)), `Policy Instrument` = factor(`Policy Instrument`, levels = Unique_Policy))
+  PlotData <- as_tibble(Matrix_List[[i]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy))
 
-  ggplot(PlotData, aes(`Policy Instrument`, Governance, col = n, fill = n, label = n)) +
+  ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
     geom_tile(color = "white", lwd = 4, linetype = 1) +
     geom_text(col = "black") +
     theme_minimal() +
-    scale_fill_gradientn(colours = c("grey", "yellow", "red"), limits = c(0, 5)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+    scale_fill_gradientn(colours = c("grey", "yellow", "purple"), limits = c(0, 35)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
   ggsave(paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
 
 # create a special zeros plot
-PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Governance = factor(Governance, levels = rev(Unique_Governance)), `Policy Instrument` = factor(`Policy Instrument`, levels = Unique_Policy)) %>% mutate(n = 0)
+PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
-ggplot(PlotData, aes(`Policy Instrument`, Governance, col = n, fill = n, label = n)) +
+ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
    geom_tile(color = "white", lwd = 4, linetype = 1) +
    geom_text(col = "black") +
    theme_minimal() +
-   scale_fill_gradientn(colours = c("grey", "yellow", "red"), limits = c(0, 5)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+   scale_fill_gradientn(colours = c("grey"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
 
 ggsave("Blank.jpg", width = 10, height = 10, units = "cm")
 
 # create a special template plot
-PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Governance = factor(Governance, levels = rev(Unique_Governance)), `Policy Instrument` = factor(`Policy Instrument`, levels = Unique_Policy)) %>% mutate(n = 0)
+PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
-ggplot(PlotData, aes(`Policy Instrument`, Governance, col = n, fill = n, label = n)) +
+ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
    geom_tile(color = "white", lwd = 4, linetype = 1) +
    theme_minimal() +
-   scale_fill_gradientn(colours = c("grey", "yellow", "red"), limits = c(0, 5)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+   scale_fill_gradientn(colours = c("grey"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
 
 ggsave("Template.jpg", width = 10, height = 10, units = "cm")
 
