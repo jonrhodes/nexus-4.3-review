@@ -410,17 +410,6 @@ for (i in 1:length(Unique_Challenges)) {
   ggsave(paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
 
-# create a special zeros plot
-PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
-
-ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
-   geom_tile(color = "white", lwd = 4, linetype = 1) +
-   geom_text(col = "black") +
-   theme_minimal() +
-   scale_fill_gradientn(colours = c("grey"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
-
-ggsave("Blank.jpg", width = 10, height = 10, units = "cm")
-
 # create a special template plot
 PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
