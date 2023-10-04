@@ -341,6 +341,15 @@ Policies <- unlist(Data_Select_Split$Policy) %>% as_tibble() %>%
 # write to csv
 write_csv(Policies, "policies_counts.csv")
 
+# summarise actors
+
+# get counts of each actor type considered
+Actorss <- unlist(Data_Select_Split$Actors) %>% as_tibble() %>%
+      mutate(Actors = value) %>% count(Actors)
+
+# write to csv
+write_csv(Actorss, "actors_counts.csv")
+
 # create some plots
 
 # get alluvial plot of nexus challenges versus nexus elements
