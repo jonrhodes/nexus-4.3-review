@@ -1,63 +1,54 @@
 CrossCut,CrossCut_New
+Energy,Energy
+Policyscape (policy landscape),Politics and Democracy
 Equity,Equity
 Poverty,Poverty
 Economic growth,Economy
 Employment,Employment
 Indigenous values and knowledge,ILK
 Education,Education
-Energy,Energy
-Mining,Mining
-Waste,Waste
-peace,Armed Conflict
-transport,Infrastructure
-trade,Trade
-resources consumption,NA
-justice,Justice
-strong institutions,NA
-Land,Land
-capital,NA
-NA,NA
-LULC,Land
-gender,Gender
-Political security,Politics and Democracy
-Trade,Trade
-Security,Security
-procedural justice,Justice
-Research,NA
-Political instability,Politics and Democracy
-Gender,Gender
-Tourism,Tourism
-resilience,Resilience
 social cohesion,Social Cohesion
-Soi,NA
-Power relations,Power Dynamics
+livelihoods,Livelihoods
+NA,NA
+Migration,Migration
+gender,Gender
+Gender,Gender
+LULC,Land
+civil rights,Civil Rights
+democracy,Politics and Democracy
+rule of law,Rule of Law
+Land,Land
+Waste,Waste
+Technology,NA
+Land and tourism,Land
+services,Infrastructure
+power dynamics,Power Dynamics
+Safety,Security
+Soil,Land
+Urbanization,Urbanisation
+migration,Migration
+Livelihoods,Livelihoods
+,NA
+population growth,Population Growth
+corruption,Corruption
 Emergency response,Disaster Recovery
 Infrastructure,Infrastructure
 Public health,NA
 Flood recovery,Disaster Recovery
-population growth,Population Growth
-corruption,Corruption
-Livelihoods,Livelihoods
-,NA
-Urbanization,Urbanisation
-migration,Migration
-Soil,Land
-Safety,Security
-power dynamics,Power Dynamics
-services,Infrastructure
-Land and tourism,Land
-Authors also control for other city-level socioeconomic factors,Economy
-including population density (to indicate vulnerability) and wheter a city is considerer to be a world city or a capital city. In addition,NA
-authors incorporated country-level variables,NA
-such as years in the EU,NA
-civil liberty status,NA
-level of renewable energy adoption,Energy
-climate change awareness,NA
-and GDP growth.,NA
-Technology,NA
-civil rights,Civil Rights
-democracy,Politics and Democracy
-rule of law,Rule of Law
-Migration,Migration
-livelihoods,Livelihoods
-Policyscape (policy landscape),Politics and Democracy
+Power relations,Power Dynamics
+Soi,NA
+Tourism,Tourism
+resilience,Resilience
+Political instability,Politics and Democracy
+procedural justice,Justice
+Security,Security
+Trade,Trade
+Political security,Politics and Democracy
+capital,NA
+peace,Armed Conflict
+justice,Justice
+strong institutions,NA
+trade,Trade
+resources consumption,NA
+transport,Infrastructure
+Mining,Mining

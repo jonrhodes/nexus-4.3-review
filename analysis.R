@@ -85,8 +85,8 @@ Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
                        if (all(is.na(y$NChallenge_New))) {return(as.vector(y$NChallenge_New))} else
                        {return(as.vector(filter(y, !is.na(NChallenge_New))$NChallenge_New))}}))
 
-# recategorise governance appraoches - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
-# note also that this only used governance appraoches listed in Table 4.4 of the chapter - all other govenance appraoches are ignored
+# recategorise governance appraoches - note that this categorises the "other" responses as "Other"( )"- change code here to avoid this or to do something else
+# note also that this only considers governance appraoches listed in Table 4.4 of the chapter - all other govenance appraoches are ignored [this may change]
 
 # get look up table so as to rename governance types
 LookupGov <- unique(unlist(Data_Select_Split$Gov)) %>% as_tibble() %>%
@@ -98,15 +98,15 @@ LookupGov <-  unique(unlist(LookupGov$value)) %>% as_tibble() %>%
                   str_detect(Gov, fixed("hierarchical", ignore_case = TRUE)) ~ "Hierarchical Governance",
                   str_detect(Gov, fixed("market", ignore_case = TRUE)) ~ "Market Governance",
                   str_detect(Gov, fixed("network", ignore_case = TRUE)) ~ "Network Governance",
-                  str_detect(Gov, fixed("good", ignore_case = TRUE)) ~ "Good Governance",
-                  str_detect(Gov, fixed("multi-level", ignore_case = TRUE)) ~ "Multi-level Governance",
-                  str_detect(Gov, fixed("multilevel", ignore_case = TRUE)) ~ "Multi-level Governance",
+                  str_detect(Gov, fixed("good", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("multi-level", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("multilevel", ignore_case = TRUE)) ~ "Other",
                   str_detect(Gov, fixed("community", ignore_case = TRUE)) ~ "Community Governance",
-                  str_detect(Gov, fixed("transformative", ignore_case = TRUE)) ~ "Transformative Governance",
-                  str_detect(Gov, fixed("polycentric", ignore_case = TRUE)) ~ "Polycentric Governance",
-                  str_detect(Gov, fixed("nested", ignore_case = TRUE)) ~ "Hierarchical Governance",
-                  str_detect(Gov, fixed("reflexive", ignore_case = TRUE)) ~ "Reflexive Governance",
-                  str_detect(Gov, fixed("adaptive", ignore_case = TRUE)) ~ "Adaptive Governance"
+                  str_detect(Gov, fixed("transformative", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("polycentric", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("nested", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("reflexive", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("adaptive", ignore_case = TRUE)) ~ "Other"
                 ))
 
 # write to csv
