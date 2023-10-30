@@ -454,7 +454,7 @@ colnames(region_counts)[colnames(region_counts) == "Region"] <- "Sub.region.Name
 merged_data <- merge(merged_data, region_counts, by = "Sub.region.Name")
 
 # Define the color scale from red (highest) to yellow (lowest)
-color_scale <- scale_fill_gradient(low = "#B2D78C", high = "#67518A")
+color_scale <-  scale_fill_gradientn(colors = c("#D9AA80", "#B65719", "#791E32"))
 
 # Plot the shapefile without displaying country polygon borders
 my_plot <- ggplot(data = merged_data) +
@@ -470,7 +470,7 @@ ggsave(filename = "./studies_region_counts.png", plot = my_plot, width = 6, heig
 #Code to create figure 4.14 - heatmap showing nexus elements, governance types and policy instruments
 #Option 1
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
-Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Governance)
+Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = TRUE, Merge2 = FALSE)
 Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Policy)
 Gov_Nexus <- as.data.frame(Gov_Nexus)
 Pol_Nexus <- as.data.frame(Pol_Nexus)
@@ -478,20 +478,42 @@ Pol_Nexus <- as.data.frame(Pol_Nexus)
 # Use pivot_wider to reshape the data frame
 reshaped_Gov_Nexus <- pivot_wider(
   data = Gov_Nexus,
-  names_from = "Gov",
+  names_from = "Nexus",
   values_from = "Freq"
 )
 
 # Use pivot_wider to reshape the data frame
 reshaped_Pol_Nexus <- pivot_wider(
   data = Pol_Nexus,
-  names_from = "Policy",
+  names_from = "Nexus",
   values_from = "Freq"
 )
 
 merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
+
+colnames(reshaped_Pol_Nexus)[1] <- "Gov"
+
+merged <- rbind(reshaped_Gov_Nexus, reshaped_Pol_Nexus)
+
+# Assuming 'reshaped_Gov_Nexus' and 'reshaped_Pol_Nexus' are your data frames
+merged <- bind_rows(reshaped_Gov_Nexus, reshaped_Pol_Nexus, .id = "Source") %>%
+  group_by_all() %>%
+  summarise_all(~coalesce(., 0)) %>%
+  ungroup()
+
+merged <- merged[, !colnames(merged) %in% "Food"]
+# Remove row where "nexus" is "food"
+#merged <- subset(merged, Nexus != "Food")
 merged_table_remove_names <- merged
-merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[3:ncol(merged_table_remove_names)])
+
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
+
+# Replace all NAs with 0 in the entire dataframe
+merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
+
 #colnames(merged_table_remove_names) <- NULL
 #rownames(merged_table_remove_names) <- NULL
 
@@ -502,21 +524,24 @@ merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merg
 # Convert all columns to numeric in the dataframe
 #merged_table_remove_names <- data.frame(lapply(merged_table_remove_names, as.numeric))
 
+
 # Define the color palette
-my_colors <- colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100)
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+
+#merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
   as.matrix(merged_table_remove_names),
   name = "No. of
 studies",
-  col = my_colors,
+  col = color_palette,
   cluster_rows = T,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
   },
-  row_labels = c(merged$Nexus),
+  row_labels = merged$Gov,
   show_row_names = TRUE,
   show_column_names = TRUE,  # Turn off column labels at the bottom
   column_names_rot = 40,
@@ -525,67 +550,9 @@ studies",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 12)
+  row_names_gp = gpar(fontsize = 10)
 )
 
-# Save the heatmap to a PNG file
-png("./heatmap_elements_governance_policy.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
-print(heatmap_obj)
-dev.off()  # Close the PNG device
-#Some final touches in ppt
-
-#Option 1
-# crosstab of governance approaches versus nexus elements (nexus elements merged)
-Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Governance)
-Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Policy)
-Gov_Nexus <- as.data.frame(Gov_Nexus)
-Pol_Nexus <- as.data.frame(Pol_Nexus)
-
-# Use pivot_wider to reshape the data frame
-reshaped_Gov_Nexus <- pivot_wider(
-  data = Gov_Nexus,
-  names_from = "Gov",
-  values_from = "Freq"
-)
-
-# Use pivot_wider to reshape the data frame
-reshaped_Pol_Nexus <- pivot_wider(
-  data = Pol_Nexus,
-  names_from = "Policy",
-  values_from = "Freq"
-)
-
-merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
-merged_table_remove_names <- merged
-merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
-#colnames(merged_table_remove_names) <- NULL
-#rownames(merged_table_remove_names) <- NULL
-
-# Define the color palette
-my_colors <- colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100)
-
-# Create the heatmap
-heatmap_obj <- ComplexHeatmap::Heatmap(
-  as.matrix(merged_table_remove_names),
-  name = "No. of
-studies",
-  col = my_colors,
-  cluster_rows = T,
-  cluster_columns = F,
-  cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
-  },
-  row_labels = c(merged$Nexus),
-  show_row_names = TRUE,
-  show_column_names = TRUE,  # Turn off column labels at the bottom
-  column_names_rot = 40,
-  column_names_side = c("top"),
-  show_row_dend = FALSE,
-  #column_title = "Column Labels",  # Add a title for column labels
-  column_title_side = "top",  # Place the title at the top
-  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 12)
-)
 
 # Save the heatmap to a PNG file
 png("./heatmap_elements_governance_policy.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
@@ -595,104 +562,182 @@ dev.off()  # Close the PNG device
 
 #Option 2
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
-Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = FALSE, Merge2 = FALSE, Factors2 = Unique_Governance)
-Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = FALSE, Merge2 = FALSE, Factors2 = Unique_Policy)
-Gov_Nexus <- as.data.frame(Gov_Nexus)
-Pol_Nexus <- as.data.frame(Pol_Nexus)
-
-# Use pivot_wider to reshape the data frame
-reshaped_Gov_Nexus <- pivot_wider(
-  data = Gov_Nexus,
-  names_from = "Gov",
-  values_from = "Freq"
-)
-
-# Use pivot_wider to reshape the data frame
-reshaped_Pol_Nexus <- pivot_wider(
-  data = Pol_Nexus,
-  names_from = "Policy",
-  values_from = "Freq"
-)
-
-merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
-merged_table_remove_names <- merged
-merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
-#colnames(merged_table_remove_names) <- NULL
-#rownames(merged_table_remove_names) <- NULL
-
-# Define the color palette
-my_colors <- colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100)
-
-# Create the heatmap
-heatmap_obj <- ComplexHeatmap::Heatmap(
-  as.matrix(merged_table_remove_names),
-  name = "No. of
-studies",
-  col = my_colors,
-  cluster_rows = T,
-  cluster_columns = F,
-  cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
-  },
-  row_labels = c(merged$Nexus),
-  show_row_names = TRUE,
-  show_column_names = TRUE,  # Turn off column labels at the bottom
-  column_names_rot = 40,
-  column_names_side = c("top"),
-  show_row_dend = FALSE,
-  #column_title = "Column Labels",  # Add a title for column labels
-  column_title_side = "top",  # Place the title at the top
-  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 12)
-)
-
-# Save the heatmap to a PNG file
-png("./heatmap_elements_governance_policy_option2.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
-print(heatmap_obj)
-dev.off()  # Close the PNG device
+# Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = FALSE, Merge2 = FALSE, Factors2 = Unique_Governance)
+# Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = FALSE, Merge2 = FALSE, Factors2 = Unique_Policy)
+# Gov_Nexus <- as.data.frame(Gov_Nexus)
+# Pol_Nexus <- as.data.frame(Pol_Nexus)
+# 
+# # Use pivot_wider to reshape the data frame
+# reshaped_Gov_Nexus <- pivot_wider(
+#   data = Gov_Nexus,
+#   names_from = "Gov",
+#   values_from = "Freq"
+# )
+# 
+# # Use pivot_wider to reshape the data frame
+# reshaped_Pol_Nexus <- pivot_wider(
+#   data = Pol_Nexus,
+#   names_from = "Policy",
+#   values_from = "Freq"
+# )
+# 
+# merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
+# merged_table_remove_names <- merged
+# merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+# #colnames(merged_table_remove_names) <- NULL
+# #rownames(merged_table_remove_names) <- NULL
+# 
+# # Define the color palette
+# my_colors <- colorRampPalette(c("#B2D78C", "#0D7674", "#9C85B0"))(100)
+# 
+# # Create the heatmap
+# heatmap_obj <- ComplexHeatmap::Heatmap(
+#   as.matrix(merged_table_remove_names),
+#   name = "No. of
+# studies",
+#   col = my_colors,
+#   cluster_rows = T,
+#   cluster_columns = F,
+#   cell_fun = function(j, i, x, y, width, height, fill) {
+#     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
+#   },
+#   row_labels = c(merged$Nexus),
+#   show_row_names = TRUE,
+#   show_column_names = TRUE,  # Turn off column labels at the bottom
+#   column_names_rot = 40,
+#   column_names_side = c("top"),
+#   show_row_dend = FALSE,
+#   #column_title = "Column Labels",  # Add a title for column labels
+#   column_title_side = "top",  # Place the title at the top
+#   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
+#   row_names_gp = gpar(fontsize = 12)
+# )
+# 
+# # Save the heatmap to a PNG file
+# png("./heatmap_elements_governance_policy_option2.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+# print(heatmap_obj)
+# dev.off()  # Close the PNG device
 #Some final touches in ppt
+
+#Option 3
+# Select specific columns by name
+selected_columns <- Data_Select_Split[, c("Nexus", "Gov", "Policy")]
+
+# Assuming you want to extract Nexus, Gov, and Policy for each entry
+info_list <- Data_Select_Split %>%
+  select(Nexus, Gov, Policy)  # Select the columns of interest
+
+# View the extracted information
+head(info_list)
+
+# group by challenges and nexus elements and calculatye the frequency of each unique
+# combination
+Nex_gov_pol <- info_list %>% group_by(Nexus, Gov, Policy) %>%
+  summarize(Freq = n()) %>% ungroup()
+
+# Remove row where "nexus" is "food"
+Nex_gov_pol <- subset(Nex_gov_pol, Nexus != "Food")
+Nex_gov_pol <- subset(Nex_gov_pol, Gov != "NA")
+Nex_gov_pol <- subset(Nex_gov_pol, Policy != "NA")
+Nex_gov_pol <- subset(Nex_gov_pol, Nexus != "NA")
+
+is_alluvia_form(as.data.frame(Nex_gov_pol), axes = 1:3, silent = TRUE)
+
+# Assuming `Nex_gov_pol$Nexus` is a list of lists
+list_of_lists <- Nex_gov_pol$Nexus
+# Create a dataframe where each list is a separate row
+df <- data.frame(Nexus = unlist(lapply(list_of_lists, paste, collapse = ", ")), stringsAsFactors = FALSE)
+
+# Assuming `Nex_gov_pol$Gov` is a list of lists
+list_of_lists_gov <- Nex_gov_pol$Gov
+# Create a dataframe where each list is a separate row for Nexus
+df <- data.frame(Nexus = unlist(lapply(list_of_lists, paste, collapse = ", ")), stringsAsFactors = FALSE)
+# Create a dataframe where each list is a separate row for Gov
+df$Gov <- unlist(lapply(list_of_lists_gov, paste, collapse = ", "))
+
+# Assuming `Nex_gov_pol$Policy` is a list of lists
+list_of_lists_policy <- Nex_gov_pol$Policy
+# Create a dataframe where each list is a separate row for Nexus
+df <- data.frame(Nexus = unlist(lapply(list_of_lists, paste, collapse = ", ")), stringsAsFactors = FALSE)
+# Create a dataframe where each list is a separate row for Gov
+df$Gov <- unlist(lapply(list_of_lists_gov, paste, collapse = ", "))
+# Create a dataframe where each list is a separate row for Policy
+df$Policy <- unlist(lapply(list_of_lists_policy, paste, collapse = ", "))
+df$Freq <- Nex_gov_pol$Freq
+
+# create alluvial plot
+ggplot(df, aes(y = Freq, axis1 = Gov, axis2 = Policy )) +
+  geom_alluvium(aes(fill = Nexus)) +
+  geom_stratum() +
+  geom_text(stat = "stratum",
+            aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Nexus Challenges", "Nexus Elements"),
+                   expand = c(0.05, 0.05)) +
+  theme_void() +
+  guides(fill = guide_legend(title = "Number of Nexus Elements")) +
+  theme(legend.position = "bottom")
+
+ggsave("nexus_gov_policy_alluvial.jpg", width = 20, height = 10, units = "cm")
+
 
 
 #Code to create figure 4.17 Nexus challenges, Nexus elements, and cross-cutting issues
 #Option 1
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
-CrossCut_Nexus <- get_crosstab(Data_Select_Split, "CrossCut", "Nexus", Merge1 = FALSE, Merge2 = TRUE)
-CrossCut_NChallenge <- get_crosstab(Data_Select_Split, "CrossCut", "NChallenge", Merge1 = FALSE, Merge2 = FALSE)
-CrossCut_Nexus <- as.data.frame(CrossCut_Nexus)
-CrossCut_NChallenge <- as.data.frame(CrossCut_NChallenge)
+Nexus_CrossCut <- get_crosstab(Data_Select_Split, "Nexus", "CrossCut", Merge1 = TRUE, Merge2 = FALSE)
+Nexus_NChallenge <- get_crosstab(Data_Select_Split, "Nexus", "NChallenge", Merge1 = TRUE, Merge2 = FALSE)
+Nexus_CrossCut <- as.data.frame(Nexus_CrossCut)
+Nexus_NChallenge <- as.data.frame(Nexus_NChallenge)
 
 # Use pivot_wider to reshape the data frame
-reshaped_CrossCut_Nexus <- pivot_wider(
-  data = CrossCut_Nexus,
+reshaped_Nexus_CrossCut <- pivot_wider(
+  data = Nexus_CrossCut,
   names_from = "Nexus",
   values_from = "Freq"
 )
 #reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
 
 # Use pivot_wider to reshape the data frame
-reshaped_CrossCut_NChallenge <- pivot_wider(
-  data = CrossCut_NChallenge,
-  names_from = "NChallenge",
+reshaped_Nexus_NChallenge <- pivot_wider(
+  data = Nexus_NChallenge,
+  names_from = "Nexus",
   values_from = "Freq"
 )
+
+colnames(reshaped_Nexus_NChallenge)[1] <- "CrossCut"
+
+
 #reshaped_CrossCut_NChallenge$rowname <- rownames(reshaped_CrossCut_NChallenge)
+# Assuming 'reshaped_Gov_Nexus' and 'reshaped_Pol_Nexus' are your data frames
+merged <- bind_rows(reshaped_Nexus_CrossCut, reshaped_Nexus_NChallenge) %>%
+  group_by_all() %>%
+  summarise_all(~coalesce(., 0)) %>%
+  ungroup()
 
-merged <- merge(reshaped_CrossCut_Nexus, reshaped_CrossCut_NChallenge, by = "CrossCut")
-
-# Replace "_" with " " in a specific column 
+merged <- merged[, !colnames(merged) %in% "Food"]
+# Remove row where "nexus" is "food"
+#merged <- subset(merged, Nexus != "Food")
 merged_table_remove_names <- merged
-merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged_table_remove_names)])
+
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+
+# Replace all NAs with 0 in the entire dataframe
+merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
+
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
   as.matrix(merged_table_remove_names),
   name = "No. of
 studies",
-  col = my_colors,
-  cluster_rows = T,
+  col = color_palette,
+  cluster_rows = F,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
@@ -745,7 +790,7 @@ merged_table_remove_names <- merged
 merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
@@ -770,19 +815,19 @@ studies",
   row_names_gp = gpar(fontsize = 12)
 )
 
-
 # Save the heatmap to a PNG file
 png("./heatmap_chal_crosscut_option2.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
-#The actors as for cross-cutting issues? i.e., actors down the right hand side and nexus elements and nexus challenges across the top?
-#Option 1
+
+
+##Nexus vs actors
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
 Actors_Nexus <- get_crosstab(Data_Select_Split, "Actors", "Nexus", Merge1 = FALSE, Merge2 = TRUE)
-Actors_NChallenge <- get_crosstab(Data_Select_Split, "Actors", "NChallenge", Merge1 = FALSE, Merge2 = FALSE)
+#Actors_NChallenge <- get_crosstab(Data_Select_Split, "Actors", "NChallenge", Merge1 = FALSE, Merge2 = FALSE)
 Actors_Nexus <- as.data.frame(Actors_Nexus)
-Actors_NChallenge <- as.data.frame(Actors_NChallenge)
+#Actors_NChallenge <- as.data.frame(Actors_NChallenge)
 
 # Use pivot_wider to reshape the data frame
 reshaped_Actors_Nexus <- pivot_wider(
@@ -791,23 +836,27 @@ reshaped_Actors_Nexus <- pivot_wider(
   values_from = "Freq"
 )
 #reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
-
 # Use pivot_wider to reshape the data frame
-reshaped_Actors_NChallenge <- pivot_wider(
-  data = Actors_NChallenge,
-  names_from = "NChallenge",
-  values_from = "Freq"
-)
+# reshaped_Actors_NChallenge <- pivot_wider(
+#   data = Actors_NChallenge,
+#   names_from = "NChallenge",
+#   values_from = "Freq"
+# )
 #reshaped_CrossCut_NChallenge$rowname <- rownames(reshaped_CrossCut_NChallenge)
+# merged <- merge(reshaped_Actors_Nexus, reshaped_Actors_NChallenge, by = "Actors")
+# 
+# # Replace "_" with " " in a specific column 
+# merged_table_remove_names <- merged
+# merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
 
-merged <- merge(reshaped_Actors_Nexus, reshaped_Actors_NChallenge, by = "Actors")
-
-# Replace "_" with " " in a specific column 
-merged_table_remove_names <- merged
-merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+merged_table_remove_names <- as.data.frame(reshaped_Actors_Nexus[2:ncol(reshaped_Actors_Nexus)])
+merged_table_remove_names <- merged_table_remove_names[, !colnames(merged_table_remove_names) %in% "Food"]
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 
 # Original vector
 actors <- c(
@@ -831,7 +880,7 @@ heatmap_obj <- ComplexHeatmap::Heatmap(
   as.matrix(merged_table_remove_names),
   name = "No. of
 studies",
-  col = my_colors,
+  col = color_palette,
   cluster_rows = T,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
@@ -850,71 +899,76 @@ studies",
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_chal_actors.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_actors.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
-#Option 2
+
+#Nexus vs challenges
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
-Actors_Nexus <- get_crosstab(Data_Select_Split, "Actors", "Nexus", Merge1 = FALSE, Merge2 = FALSE)
-Actors_NChallenge <- get_crosstab(Data_Select_Split, "Actors", "NChallenge", Merge1 = FALSE, Merge2 = FALSE)
-Actors_Nexus <- as.data.frame(Actors_Nexus)
-Actors_NChallenge <- as.data.frame(Actors_NChallenge)
+#Actors_Nexus <- get_crosstab(Data_Select_Split, "Actors", "Nexus", Merge1 = FALSE, Merge2 = TRUE)
+Nexus_NChallenge <- get_crosstab(Data_Select_Split, "Nexus", "NChallenge", Merge1 = TRUE, Merge2 = FALSE)
+Nexus_NChallenge <- as.data.frame(Nexus_NChallenge)
+#Actors_NChallenge <- as.data.frame(Actors_NChallenge)
 
 # Use pivot_wider to reshape the data frame
-reshaped_Actors_Nexus <- pivot_wider(
-  data = Actors_Nexus,
+reshaped_Nexus_NChallenge <- pivot_wider(
+  data = Nexus_NChallenge,
   names_from = "Nexus",
   values_from = "Freq"
 )
-#reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
 
+#reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
 # Use pivot_wider to reshape the data frame
-reshaped_Actors_NChallenge <- pivot_wider(
-  data = Actors_NChallenge,
-  names_from = "NChallenge",
-  values_from = "Freq"
-)
+# reshaped_Actors_NChallenge <- pivot_wider(
+#   data = Actors_NChallenge,
+#   names_from = "NChallenge",
+#   values_from = "Freq"
+# )
 #reshaped_CrossCut_NChallenge$rowname <- rownames(reshaped_CrossCut_NChallenge)
 
-merged <- merge(reshaped_Actors_Nexus, reshaped_Actors_NChallenge, by = "Actors")
+#merged <- merge(reshaped_Actors_Nexus, reshaped_Actors_NChallenge, by = "Actors")
 
 # Replace "_" with " " in a specific column 
-merged_table_remove_names <- merged
+merged_table_remove_names <- reshaped_Nexus_NChallenge
 merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+merged_table_remove_names <- merged_table_remove_names[, !colnames(merged_table_remove_names) %in% "Food"]
+
+reshaped_Nexus_NChallenge <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#B2D78C", "#0D7674", "#67518A"))(100)
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 
-# Original vector
-actors <- c(
-  "Civil Society and 
-Community-Based Organisations",
-  "Financial Institutions",
-  "Global/Regional Institutions 
-and Science-Policy Interfaces",
-  "IPLCs",
-  "Knowledge and 
-Educational Communities",
-  "Local/National Governments 
-and Municipalities",
-  "Media and the Arts",
-  "Private Sector and 
-Business Organisations"
-)
+# # Original vector
+# actors <- c(
+#   "Civil Society and 
+# Community-Based Organisations",
+#   "Financial Institutions",
+#   "Global/Regional Institutions 
+# and Science-Policy Interfaces",
+#   "IPLCs",
+#   "Knowledge and 
+# Educational Communities",
+#   "Local/National Governments 
+# and Municipalities",
+#   "Media and the Arts",
+#   "Private Sector and 
+# Business Organisations"
+# )
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
   as.matrix(merged_table_remove_names),
   name = "No. of
 studies",
-  col = my_colors,
+  col = color_palette,
   cluster_rows = T,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 14))
+    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
   },
-  row_labels = actors,
+  row_labels = reshaped_Nexus_NChallenge$NChallenge,
   show_row_names = TRUE,
   show_column_names = TRUE,  # Turn off column labels at the bottom
   column_names_rot = 40,
@@ -922,15 +976,97 @@ studies",
   show_row_dend = FALSE,
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
-  #column_title_gp = gpar(fontsize = 16),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 13),
-  column_names_gp = gpar(fontsize = 13),
+  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
+  row_names_gp = gpar(fontsize = 12)
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_chal_actors_option2.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_chal.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
+
+
+
+
+
+
+# #Option 2
+# # crosstab of governance approaches versus nexus elements (nexus elements merged)
+# Actors_Nexus <- get_crosstab(Data_Select_Split, "Actors", "Nexus", Merge1 = FALSE, Merge2 = FALSE)
+# Actors_NChallenge <- get_crosstab(Data_Select_Split, "Actors", "NChallenge", Merge1 = FALSE, Merge2 = FALSE)
+# Actors_Nexus <- as.data.frame(Actors_Nexus)
+# Actors_NChallenge <- as.data.frame(Actors_NChallenge)
+# 
+# # Use pivot_wider to reshape the data frame
+# reshaped_Actors_Nexus <- pivot_wider(
+#   data = Actors_Nexus,
+#   names_from = "Nexus",
+#   values_from = "Freq"
+# )
+# #reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
+# 
+# # Use pivot_wider to reshape the data frame
+# reshaped_Actors_NChallenge <- pivot_wider(
+#   data = Actors_NChallenge,
+#   names_from = "NChallenge",
+#   values_from = "Freq"
+# )
+# #reshaped_CrossCut_NChallenge$rowname <- rownames(reshaped_CrossCut_NChallenge)
+# 
+# merged <- merge(reshaped_Actors_Nexus, reshaped_Actors_NChallenge, by = "Actors")
+# 
+# # Replace "_" with " " in a specific column 
+# merged_table_remove_names <- merged
+# merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged)])
+# 
+# # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
+# color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+# 
+# # Original vector
+# actors <- c(
+#   "Civil Society and 
+# Community-Based Organisations",
+#   "Financial Institutions",
+#   "Global/Regional Institutions 
+# and Science-Policy Interfaces",
+#   "IPLCs",
+#   "Knowledge and 
+# Educational Communities",
+#   "Local/National Governments 
+# and Municipalities",
+#   "Media and the Arts",
+#   "Private Sector and 
+# Business Organisations"
+# )
+# 
+# # Create the heatmap
+# heatmap_obj <- ComplexHeatmap::Heatmap(
+#   as.matrix(merged_table_remove_names),
+#   name = "No. of
+# studies",
+#   col = my_colors,
+#   cluster_rows = T,
+#   cluster_columns = F,
+#   cell_fun = function(j, i, x, y, width, height, fill) {
+#     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 14))
+#   },
+#   row_labels = actors,
+#   show_row_names = TRUE,
+#   show_column_names = TRUE,  # Turn off column labels at the bottom
+#   column_names_rot = 40,
+#   column_names_side = c("top"),
+#   show_row_dend = FALSE,
+#   #column_title = "Column Labels",  # Add a title for column labels
+#   column_title_side = "top",  # Place the title at the top
+#   #column_title_gp = gpar(fontsize = 16),  # Customize the title font size
+#   row_names_gp = gpar(fontsize = 13),
+#   column_names_gp = gpar(fontsize = 13),
+# )
+# 
+# # Save the heatmap to a PNG file
+# png("./heatmap_chal_actors_option2.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+# print(heatmap_obj)
+# dev.off()  # Close the PNG device
 
 
 
