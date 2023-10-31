@@ -489,11 +489,11 @@ reshaped_Pol_Nexus <- pivot_wider(
   values_from = "Freq"
 )
 
-merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
+#merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
 
 colnames(reshaped_Pol_Nexus)[1] <- "Gov"
 
-merged <- rbind(reshaped_Gov_Nexus, reshaped_Pol_Nexus)
+#merged <- rbind(reshaped_Gov_Nexus, reshaped_Pol_Nexus)
 
 # Assuming 'reshaped_Gov_Nexus' and 'reshaped_Pol_Nexus' are your data frames
 merged <- bind_rows(reshaped_Gov_Nexus, reshaped_Pol_Nexus, .id = "Source") %>%
@@ -536,7 +536,7 @@ heatmap_obj <- ComplexHeatmap::Heatmap(
   name = "No. of
 studies",
   col = color_palette,
-  cluster_rows = T,
+  cluster_rows = F,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
@@ -918,6 +918,8 @@ reshaped_Nexus_NChallenge <- pivot_wider(
   values_from = "Freq"
 )
 
+names <- reshaped_Nexus_NChallenge$NChallenge            
+
 #reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
 # Use pivot_wider to reshape the data frame
 # reshaped_Actors_NChallenge <- pivot_wider(
@@ -968,7 +970,7 @@ studies",
   cell_fun = function(j, i, x, y, width, height, fill) {
     grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
   },
-  row_labels = reshaped_Nexus_NChallenge$NChallenge,
+  row_labels = names,
   show_row_names = TRUE,
   show_column_names = TRUE,  # Turn off column labels at the bottom
   column_names_rot = 40,
