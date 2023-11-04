@@ -1,19 +1,8 @@
-Region,n
-Australia and New Zealand,6
-Central Asia,6
-Eastern Asia,14
-Eastern Europe,7
-Latin America and the Caribbean,19
-Melanesia,3
-Micronesia,3
-Northern Africa,5
-Northern America,12
-Northern Europe,14
-Not applicable (no specific spatial location),65
-Polynesia,2
-South-eastern Asia,14
-Southern Asia,18
-Southern Europe,12
-Sub-Saharan Africa,28
-Western Asia,12
-Western Europe,13
+Scale,n
+Local >1 km² to 100 km² (neighbourhood to municipality),12
+Multi-regional (multiple continents/geographic regions),7
+National (whole country),43
+Not applicable (no specific spatial location),64
+"Regional (multiple countries, whole continents)",28
+Site <1 km² (field to farm),2
+Subnational >100 km² (watershed),34

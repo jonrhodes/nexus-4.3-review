@@ -283,7 +283,7 @@ Scales <- unlist(Data_Select_Split$Scale) %>% as_tibble() %>%
         count(Scale)
 
 # write to csv
-write_csv(Regions, "scales_counts.csv")
+write_csv(Scales, "scales_counts.csv")
 
 # summarise nexus challenges
 
@@ -368,6 +368,12 @@ Challenges_Nexuses <- Challenges_Nexuses %>% group_by(NChallenge, Nexus, NumNexu
     summarize(Freq = n()) %>% ungroup()
 
 # create alluvial plot
+# Define the color palette
+custom_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(4)
+#custom_palette1 <- scale_fill_gradient(low = "#D9AA80", high = "#791E32")
+#custom_palette2 <- scale_fill_gradient2(low = "#D9AA80", mid = "#B65719", high = "#791E32")
+#custom_palette3 <-  scale_fill_gradientn(colors = c("#D9AA80", "#B65719", "#791E32"))
+
 ggplot(Challenges_Nexuses, aes(y = Freq, axis1 = NChallenge, axis2 = Nexus)) +
     geom_alluvium(aes(fill = NumNexus)) +
     geom_stratum() +
@@ -375,7 +381,8 @@ ggplot(Challenges_Nexuses, aes(y = Freq, axis1 = NChallenge, axis2 = Nexus)) +
             aes(label = after_stat(stratum))) +
     scale_x_discrete(limits = c("Nexus Challenges", "Nexus Elements"),
                    expand = c(0.05, 0.05)) +
-    theme_void() +
+    scale_fill_manual(values = color_palette) +
+  theme_void() +
     guides(fill = guide_legend(title = "Number of Nexus Elements")) +
     theme(legend.position = "bottom")
 
@@ -387,7 +394,7 @@ ggsave("challenges_nexus_alluvial.jpg", width = 20, height = 10, units = "cm")
 Unique_Challenges <- sort(unique(unlist(Data_Select_Split$NChallenge)))[c(1, 3, 5, 4, 2)]
 
 # get all unique governance types
-Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(4, 5, 7, 2, 6, 8, 10, 1, 9, 3)]
+Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(2, 3, 4, 1, 5)]
 
 # get all unique policy instruments
 Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
@@ -415,9 +422,8 @@ for (i in 1:length(Unique_Challenges)) {
 
   ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
     geom_tile(color = "white", lwd = 4, linetype = 1) +
-    geom_text(col = "black") +
     theme_minimal() +
-    scale_fill_gradientn(colours = c("grey", "yellow", "purple"), limits = c(0, 35)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+    scale_fill_gradientn(colours = c("#D9AA80", "#B65719", "#791E32"), limits = c(0, 32)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
   ggsave(paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
 
@@ -425,9 +431,9 @@ for (i in 1:length(Unique_Challenges)) {
 PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
 ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
-   geom_tile(color = "white", lwd = 4, linetype = 1) +
+   geom_tile(color = "black", lwd = 1, linetype = 1) +
    theme_minimal() +
-   scale_fill_gradientn(colours = c("grey"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+   scale_fill_gradientn(colours = c("white"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
 
 ggsave("Template.jpg", width = 10, height = 10, units = "cm")
 
