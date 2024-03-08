@@ -1,54 +1,66 @@
 CrossCut,CrossCut_New
-Energy,Energy
-Policyscape (policy landscape),Politics and Democracy
-Equity,Equity
-Poverty,Poverty
 Economic growth,Economy
-Employment,Employment
+Energy,Energy
+Poverty,Poverty
 Indigenous values and knowledge,ILK
-Education,Education
-social cohesion,Social Cohesion
-livelihoods,Livelihoods
-NA,NA
-Migration,Migration
-gender,Gender
-Gender,Gender
-LULC,Land
-civil rights,Civil Rights
-democracy,Politics and Democracy
-rule of law,Rule of Law
-Land,Land
-Waste,Waste
-Technology,NA
-Land and tourism,Land
-services,Infrastructure
-power dynamics,Power Dynamics
-Safety,Security
+Equity,Equity
 Soil,Land
-Urbanization,Urbanisation
-migration,Migration
-Livelihoods,Livelihoods
-,NA
-population growth,Population Growth
-corruption,Corruption
+NA,NA
+Employment,Employment
+Other,NA
+Soil (erosion),Land
+Education,Education
+Mining,Mining
+Waste,Waste
+peace,Armed Conflict
+transport,Infrastructure
+trade,Trade
+resources consumption,Consumption
+justice,Justice
+strong institutions,NA
+urbanisation,Urbanisation
+gender,Gender
+Land,Land
+Social inclusion,Equity
+capital,Economy
+Land use (deforestation),Land
+Political security,Politics and Democracy
+Gender,Gender
+human-rights,Civil Rights
+Land cover,Land
+Safety,Security
+Trade,Trade
+"""Land""",Land
+Security,Security
+procedural justice,Justice
+Political instability,Politics and Democracy
+Tourism,Tourism
+resilience,Resilience
+social cohesion,Social Cohesion
+Soi,NA
+Power relations,Power Dynamics
 Emergency response,Disaster Recovery
 Infrastructure,Infrastructure
 Public health,NA
 Flood recovery,Disaster Recovery
-Power relations,Power Dynamics
-Soi,NA
-Tourism,Tourism
-resilience,Resilience
-Political instability,Politics and Democracy
-procedural justice,Justice
-Security,Security
-Trade,Trade
-Political security,Politics and Democracy
-capital,NA
-peace,Armed Conflict
-justice,Justice
-strong institutions,NA
-trade,Trade
-resources consumption,NA
-transport,Infrastructure
-Mining,Mining
+population growth,Population Growth
+corruption,Corruption
+Livelihoods,Livelihoods
+,NA
+Urbanization,Urbanisation
+migration,Migration
+Land use,Land
+power dynamics,Power Dynamics
+services,Infrastructure
+Land and tourism,Land
+Waster,Waste
+Transport,Infrastructure
+Technology,Technology
+Conflicts,NA
+civil rights,Civil Rights
+democracy,Politics and Democracy
+rule of law,Rule of Law
+Migration,Migration
+LULC,Land
+livelihoods,Livelihoods
+Policyscape (policy landscape),Politics and Democracy

@@ -1,22 +1,21 @@
 # load packages
 library(tidyverse)
 library(ggalluvial)
-#library(dplyr)
-#library(stringr)
 library(gplots)
-#library(tidyr)
-#library(pheatmap)
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+if (!require("ComplexHeatmap", quietly = TRUE))
+    BiocManager::install("ComplexHeatmap")
 library(ComplexHeatmap)
 library(stringdist)
 library(sf)
 library(RColorBrewer)
-#library(ggplot2)
 
 # load functions
 source("functions.R")
 
 # load review data from covidence
-Data <- read_csv("review_283729_20230922170037.csv")
+Data <- read_csv("review_283729_20240308161833.csv")
 
 # extract data on paper types, regions, scale, nexus elements, nexus challnenges
 # governance types, policy instruments, actors, and cross cutting issues
@@ -85,8 +84,7 @@ Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
                        if (all(is.na(y$NChallenge_New))) {return(as.vector(y$NChallenge_New))} else
                        {return(as.vector(filter(y, !is.na(NChallenge_New))$NChallenge_New))}}))
 
-# recategorise governance appraoches - note that this categorises the "other" responses as "Other"( )"- change code here to avoid this or to do something else
-# note also that this only considers governance appraoches listed in Table 4.4 of the chapter - all other govenance appraoches are ignored [this may change]
+# recategorise governance appraoches - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
 
 # get look up table so as to rename governance types
 LookupGov <- unique(unlist(Data_Select_Split$Gov)) %>% as_tibble() %>%
@@ -98,15 +96,38 @@ LookupGov <-  unique(unlist(LookupGov$value)) %>% as_tibble() %>%
                   str_detect(Gov, fixed("hierarchical", ignore_case = TRUE)) ~ "Hierarchical Governance",
                   str_detect(Gov, fixed("market", ignore_case = TRUE)) ~ "Market Governance",
                   str_detect(Gov, fixed("network", ignore_case = TRUE)) ~ "Network Governance",
-                  str_detect(Gov, fixed("good", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("multi-level", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("multilevel", ignore_case = TRUE)) ~ "Other",
+                  str_detect(Gov, fixed("good", ignore_case = TRUE)) ~ "Good Governance",
+                  str_detect(Gov, fixed("multi-level", ignore_case = TRUE)) ~ "Multi-level Governance",
+                  str_detect(Gov, fixed("multilevel", ignore_case = TRUE)) ~ "Multi-level Governance",
                   str_detect(Gov, fixed("community", ignore_case = TRUE)) ~ "Community Governance",
-                  str_detect(Gov, fixed("transformative", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("polycentric", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("nested", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("reflexive", ignore_case = TRUE)) ~ "Other",
-                  str_detect(Gov, fixed("adaptive", ignore_case = TRUE)) ~ "Other"
+                  str_detect(Gov, fixed("transformative", ignore_case = TRUE)) ~ "Transformative Governance",
+                  str_detect(Gov, fixed("transformational", ignore_case = TRUE)) ~ "Transformative Governance",
+                  str_detect(Gov, fixed("collaborative", ignore_case = TRUE)) ~ "Collaborative Governance",
+                  str_detect(Gov, fixed("cooperative", ignore_case = TRUE)) ~ "Cooperative Governance",
+                  str_detect(Gov, fixed("flexible", ignore_case = TRUE)) ~ "Flexible Governance",
+                  str_detect(Gov, fixed("inclusive", ignore_case = TRUE)) ~ "Inclusive Governance",
+                  str_detect(Gov, fixed("multi-lateral", ignore_case = TRUE)) ~ "Multi-lateral Governance",
+                  str_detect(Gov, fixed("multilateral", ignore_case = TRUE)) ~ "Multi-lateral Governance",
+                  str_detect(Gov, fixed("participatory", ignore_case = TRUE)) ~ "Participatory Governance",
+                  str_detect(Gov, fixed("polycentric", ignore_case = TRUE)) ~ "Polycentric Governance",
+                  str_detect(Gov, fixed("cross-sectoral", ignore_case = TRUE)) ~ "Cross-sectoral Governance",
+                  str_detect(Gov, fixed("integrative", ignore_case = TRUE)) ~ "Integrative Governance",
+                  str_detect(Gov, fixed("integrated", ignore_case = TRUE)) ~ "Integrative Governance",
+                  str_detect(Gov, fixed("nested", ignore_case = TRUE)) ~ "Nested Governance",
+                  str_detect(Gov, fixed("meta-governance", ignore_case = TRUE)) ~ "Meta-governance",
+                  str_detect(Gov, fixed("coordinated", ignore_case = TRUE)) ~ "Coordinated Governance",
+                  str_detect(Gov, fixed("coordination", ignore_case = TRUE)) ~ "Coordinated Governance",
+                  str_detect(Gov, fixed("reflexive", ignore_case = TRUE)) ~ "Reflexive Governance",
+                  str_detect(Gov, fixed("multi-modal", ignore_case = TRUE)) ~ "Multi-modal Governance",
+                  str_detect(Gov, fixed("decentralised", ignore_case = TRUE)) ~ "Decentralised Governance",
+                  str_detect(Gov, fixed("nexus", ignore_case = TRUE)) ~ "Nexus Governance",
+                  str_detect(Gov, fixed("system", ignore_case = TRUE)) ~ "System Governance",
+                  str_detect(Gov, fixed("biocultural", ignore_case = TRUE)) ~ "Biocultural Governance",
+                  str_detect(Gov, fixed("resource based", ignore_case = TRUE)) ~ "Resource-based Governance",
+                  str_detect(Gov, fixed("centralized", ignore_case = TRUE)) ~ "Centralised Governance",
+                  str_detect(Gov, fixed("consumption-based", ignore_case = TRUE)) ~ "Consumption-based Governance",
+                  str_detect(Gov, fixed("transboundary", ignore_case = TRUE)) ~ "Transboundary Governance",
+                  str_detect(Gov, fixed("adaptive", ignore_case = TRUE)) ~ "Adaptive Governance"
                 ))
 
 # write to csv
@@ -171,8 +192,10 @@ LookupCC <- unique(unlist(Data_Select_Split$CrossCut)) %>% as_tibble() %>%
 LookupCC <-  unique(unlist(LookupCC$value)) %>% as_tibble() %>%
                 rename(CrossCut = value) %>% mutate(CrossCut_New = NA) %>% mutate(CrossCut_New = case_when(
                   str_detect(CrossCut, fixed("equity", ignore_case = TRUE)) ~ "Equity",
+                  str_detect(CrossCut, fixed("consumption", ignore_case = TRUE)) ~ "Consumption",
                   str_detect(CrossCut, fixed("poverty", ignore_case = TRUE)) ~ "Poverty",
                   str_detect(CrossCut, fixed("economic", ignore_case = TRUE)) ~ "Economy",
+                  str_detect(CrossCut, fixed("capital", ignore_case = TRUE)) ~ "Economy",
                   str_detect(CrossCut, fixed("employment", ignore_case = TRUE)) ~ "Employment",
                   str_detect(CrossCut, fixed("indigenous", ignore_case = TRUE)) ~ "ILK",
                   str_detect(CrossCut, fixed("education", ignore_case = TRUE)) ~ "Education",
@@ -202,13 +225,16 @@ LookupCC <-  unique(unlist(LookupCC$value)) %>% as_tibble() %>%
                   str_detect(CrossCut, fixed("corruption", ignore_case = TRUE)) ~ "Corruption",
                   str_detect(CrossCut, fixed("livelihoods", ignore_case = TRUE)) ~ "Livelihoods",
                   str_detect(CrossCut, fixed("urbanization", ignore_case = TRUE)) ~ "Urbanisation",
+                  str_detect(CrossCut, fixed("urbanisation", ignore_case = TRUE)) ~ "Urbanisation",
                   str_detect(CrossCut, fixed("migration", ignore_case = TRUE)) ~ "Migration",
                   str_detect(CrossCut, fixed("soil", ignore_case = TRUE)) ~ "Land",
                   str_detect(CrossCut, fixed("safety", ignore_case = TRUE)) ~ "Security",
                   str_detect(CrossCut, fixed("services", ignore_case = TRUE)) ~ "Infrastructure",
-                  str_detect(CrossCut, fixed("civil rights", ignore_case = TRUE)) ~ "Civil Rights",
+                  str_detect(CrossCut, fixed("rights", ignore_case = TRUE)) ~ "Civil Rights",
                   str_detect(CrossCut, fixed("democracy", ignore_case = TRUE)) ~ "Politics and Democracy",
                   str_detect(CrossCut, fixed("rule of law", ignore_case = TRUE)) ~ "Rule of Law",
+                  str_detect(CrossCut, fixed("social inclusion", ignore_case = TRUE)) ~ "Equity",
+                  str_detect(CrossCut, fixed("technology", ignore_case = TRUE)) ~ "Technology",
                   str_detect(CrossCut, fixed("policy landscape", ignore_case = TRUE)) ~ "Politics and Democracy"
                 ))
 
