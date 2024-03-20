@@ -15,7 +15,20 @@ library(RColorBrewer)
 source("functions.R")
 
 # load review data from covidence
-Data <- read_csv("review_283729_20240308161833.csv")
+Data <- read_csv("review_283729_20240320131759.csv") %>% mutate(`Covidence #` = paste0("#", as.character(`Covidence #`)))
+
+# load list of references with tags from covidence
+Refs <- read_csv("review_283729_included_csv_20240320131744.csv")
+
+# get the references for grey literature
+RefsGrey <- Refs %>% select('Covidence #', Tags) %>% filter(Tags == "Grey Literature")
+
+# joint to data
+JoinedData <- Data %>% left_join(RefsGrey, by = join_by(`Covidence #`))
+
+# split data into peer reviwed and grey literature sets
+Data <- filter(JoinedData, is.na(Tags)) %>% select(-Tags)
+Data_Grey <- filter(JoinedData, !is.na(Tags)) %>% select(-Tags)
 
 # extract data on paper types, regions, scale, nexus elements, nexus challnenges
 # governance types, policy instruments, actors, and cross cutting issues
