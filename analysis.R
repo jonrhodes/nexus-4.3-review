@@ -482,12 +482,14 @@ ggsave("Template.jpg", width = 10, height = 10, units = "cm")
 #Can download the UN country to region table here: https://unstats.un.org/unsd/methodology/m49/overview/
 # https://data.unhabitat.org/search?collection=Dataset&q=M49%20regions
 # Read the countries shapefile 
-shp_data <- st_read("./data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
+shp_data <- st_read("D:/IPBES_review/data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
+# Transform the projection to Mollweide (EPSG:54009)
+shp_data <- st_transform(shp_data, crs = "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
 # Rename the column in shp_data to match the UN table
 shp_data <- shp_data %>%
   rename(ISO.alpha3.Code = ISO3)
 # Read the UN table file into a data frame
-csv_data <- read.csv("./data/UNSD — Methodology.csv", sep = ";")
+csv_data <- read.csv("D:/IPBES_review/data/UNSD — Methodology.csv", sep = ";")
 #Merge together
 merged_data <- merge(shp_data, csv_data, by = "ISO.alpha3.Code")
 
@@ -512,11 +514,12 @@ my_plot <- ggplot(data = merged_data) +
 ggsave(filename = "./studies_region_counts.png", plot = my_plot, width = 6, height = 4, dpi = 300)
 
 
-#Code to create figure 4.14 - heatmap showing nexus elements, governance types and policy instruments
+#Code to create figure 4.13 - heatmap showing nexus elements, governance types and policy instruments
 #Option 1
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
 Gov_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Gov", Merge1 = TRUE, Merge2 = FALSE)
-Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Policy)
+#Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = TRUE, Merge2 = FALSE, Factors2 = Unique_Policy)
+Pol_Nexus <- get_crosstab(Data_Select_Split, "Nexus", "Policy", Merge1 = TRUE, Merge2 = FALSE)
 Gov_Nexus <- as.data.frame(Gov_Nexus)
 Pol_Nexus <- as.data.frame(Pol_Nexus)
 
@@ -559,6 +562,26 @@ merged_table_remove_names <- merged_table_remove_names %>%
 # Replace all NAs with 0 in the entire dataframe
 merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
 
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = 29, ncol = 22) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
 #colnames(merged_table_remove_names) <- NULL
 #rownames(merged_table_remove_names) <- NULL
 
@@ -577,14 +600,14 @@ color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
-  as.matrix(merged_table_remove_names),
-  name = "No. of
-studies",
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of studies",
   col = color_palette,
   cluster_rows = F,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
   },
   row_labels = merged$Gov,
   show_row_names = TRUE,
@@ -600,7 +623,7 @@ studies",
 
 
 # Save the heatmap to a PNG file
-png("./heatmap_elements_governance_policy.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+png("./heatmap_elements_governance_policy1.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 #Some final touches in ppt
@@ -776,16 +799,37 @@ color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
 
 
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = 33, ncol = 22) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
+
+
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
-  as.matrix(merged_table_remove_names),
-  name = "No. of
-studies",
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of studies",
   col = color_palette,
   cluster_rows = F,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
   },
   row_labels = c(merged$CrossCut),
   show_row_names = TRUE,
@@ -801,7 +845,7 @@ studies",
 
 
 # Save the heatmap to a PNG file
-png("./heatmap_chal_crosscut.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_chal_crosscut2.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
@@ -900,6 +944,30 @@ merged_table_remove_names <- merged_table_remove_names[, !colnames(merged_table_
 merged_table_remove_names <- merged_table_remove_names %>%
   select(sort(colnames(.)))
 
+
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = 8, ncol = 21) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
+
+
+
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
 color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
 
@@ -922,14 +990,14 @@ Business Organisations"
 
 # Create the heatmap
 heatmap_obj <- ComplexHeatmap::Heatmap(
-  as.matrix(merged_table_remove_names),
-  name = "No. of
-studies",
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of studies",
   col = color_palette,
   cluster_rows = T,
   cluster_columns = F,
   cell_fun = function(j, i, x, y, width, height, fill) {
-    grid.text(sprintf("%.0f", merged_table_remove_names[i, j]), x, y, gp = gpar(fontsize = 12))
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
   },
   row_labels = actors,
   show_row_names = TRUE,
@@ -944,7 +1012,7 @@ studies",
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_actors.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_actors1.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
