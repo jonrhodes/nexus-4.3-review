@@ -10,19 +10,8 @@ Employment,Employment
 Other,NA
 Soil (erosion),Land
 Education,Education
-Mining,Mining
-Waste,Waste
-peace,Armed Conflict
-transport,Infrastructure
-trade,Trade
-resources consumption,Consumption
-justice,Justice
-strong institutions,NA
-urbanisation,Urbanisation
-gender,Gender
 Land,Land
-Social inclusion,Equity
-capital,Economy
+gender,Gender
 Land use (deforestation),Land
 Political security,Politics and Democracy
 Gender,Gender
@@ -38,6 +27,7 @@ Tourism,Tourism
 resilience,Resilience
 social cohesion,Social Cohesion
 Soi,NA
+Waste,Waste
 Power relations,Power Dynamics
 Emergency response,Disaster Recovery
 Infrastructure,Infrastructure
