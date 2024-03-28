@@ -27,7 +27,7 @@ RefsGrey <- Refs %>% select('Covidence #', Tags) %>% filter(Tags == "Grey Litera
 # joint to data
 JoinedData <- Data %>% left_join(RefsGrey, by = join_by(`Covidence #`))
 
-# split data into peer reviwed and grey literature sets
+# split data into peer reviewed and grey literature sets
 Data <- filter(JoinedData, is.na(Tags)) %>% select(-Tags)
 Data_Grey <- filter(JoinedData, !is.na(Tags)) %>% select(-Tags)
 
@@ -365,7 +365,7 @@ Data_Select_Split$Nexus %>% map(.f = function (x)
 
 # summarise governance types
 
-# get counts of each governace type considered
+# get counts of each governance type considered
 Govs <- unlist(Data_Select_Split$Gov) %>% as_tibble() %>%
       mutate(Gov = value) %>% count(Gov)
 
@@ -660,7 +660,7 @@ ggsave("Template.jpg", width = 10, height = 10, units = "cm")
 # Read the countries shapefile 
 shp_data <- st_read("D:/IPBES_review/data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
 # Transform the projection to Mollweide (EPSG:54009)
-shp_data <- st_transform(shp_data, crs = "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
+shp_data <- st_transform(shp_data, crs = "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
 # Rename the column in shp_data to match the UN table
 shp_data <- shp_data %>%
   rename(ISO.alpha3.Code = ISO3)
@@ -681,13 +681,15 @@ color_scale <-  scale_fill_gradientn(colors = c("#D9AA80", "#B65719", "#791E32")
 
 # Plot the shapefile without displaying country polygon borders
 my_plot <- ggplot(data = merged_data) +
-  geom_sf(aes(fill = n), color = "NA") +  
+  geom_sf(aes(fill = n), color = NA, size = 0, linetype = "blank") +  
   color_scale +
   labs(title = "Number of studies in each region", fill = "Count") +
   theme_minimal()
 
 # Export the ggplot as a PNG image
 ggsave(filename = "./studies_region_counts.png", plot = my_plot, width = 6, height = 4, dpi = 300)
+
+
 
 
 #Code to create figure 4.13 - heatmap showing nexus elements, governance types and policy instruments
@@ -714,11 +716,161 @@ reshaped_Pol_Nexus <- pivot_wider(
 )
 
 #merged <- merge(reshaped_Gov_Nexus, reshaped_Pol_Nexus, by = "Nexus")
-
+#Policy
 colnames(reshaped_Pol_Nexus)[1] <- "Gov"
+merged <- reshaped_Pol_Nexus[, !colnames(reshaped_Pol_Nexus) %in% "Food"]
+merged_table_remove_names <- merged
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged_table_remove_names)])
 
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
+
+# Replace all NAs with 0 in the entire dataframe
+merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
+
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = nrow(merged_table_remove_names), ncol = ncol(merged_table_remove_names)) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
+# Define the color palette
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+
+#merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
+
+# Create the heatmap
+heatmap_obj <- ComplexHeatmap::Heatmap(
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of occurences 
+for each nexus 
+combination",
+  col = color_palette,
+  cluster_rows = F,
+  cluster_columns = F,
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
+  },
+  row_labels = reshaped_Pol_Nexus$Gov,
+  show_row_names = TRUE,
+  show_column_names = TRUE,  # Turn off column labels at the bottom
+  column_names_rot = 40,
+  column_names_side = c("top"),
+  show_row_dend = FALSE,
+  #column_title = "Column Labels",  # Add a title for column labels
+  column_title_side = "top",  # Place the title at the top
+  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
+  row_names_gp = gpar(fontsize = 10)
+)
+
+# Save the heatmap to a PNG file
+png("./heatmap_elements_policy.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+print(heatmap_obj)
+dev.off()  # Close the PNG device
+#Some final touches in ppt
+
+
+#Governance
+colnames(reshaped_Gov_Nexus)[1] <- "Gov"
+merged <- reshaped_Gov_Nexus[, !colnames(reshaped_Gov_Nexus) %in% "Food"]
+
+# Identify the rows corresponding to the specified categories
+specified_categories <- c("Community Governance", "Hierarchical Governance", "Market Governance", "Network Governance")
+# Filter out the rows with the specified categories
+specified_rows <- reshaped_Gov_Nexus %>% filter(Gov %in% specified_categories)
+# Filter out the rows not included in the specified categories
+remaining_rows <- reshaped_Gov_Nexus %>% filter(!Gov %in% specified_categories)
+# Combine the specified rows with the remaining rows
+reshaped_Gov_Nexus_reordered <- bind_rows(specified_rows, remaining_rows)
+# View the first few rows to check the new order
+head(reshaped_Gov_Nexus_reordered)
+merged <- reshaped_Gov_Nexus_reordered
+
+merged_table_remove_names <- reshaped_Gov_Nexus_reordered
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged_table_remove_names)])
+
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
+
+# Replace all NAs with 0 in the entire dataframe
+merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
+
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = nrow(merged_table_remove_names), ncol = ncol(merged_table_remove_names)) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
+# Define the color palette
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+
+#merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
+
+# Create the heatmap
+heatmap_obj <- ComplexHeatmap::Heatmap(
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of occurences 
+for each nexus 
+combination",
+  col = color_palette,
+  cluster_rows = F,
+  cluster_columns = F,
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
+  },
+  row_labels = merged$Gov,
+  show_row_names = TRUE,
+  show_column_names = TRUE,  # Turn off column labels at the bottom
+  column_names_rot = 40,
+  column_names_side = c("top"),
+  show_row_dend = FALSE,
+  #column_title = "Column Labels",  # Add a title for column labels
+  column_title_side = "top",  # Place the title at the top
+  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
+  row_names_gp = gpar(fontsize = 10)
+)
+
+# Save the heatmap to a PNG file
+png("./heatmap_elements_gov.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+print(heatmap_obj)
+dev.off()  # Close the PNG device
+#Some final touches in ppt
+
+
+#Original figure where they were both merged together
 #merged <- rbind(reshaped_Gov_Nexus, reshaped_Pol_Nexus)
-
 # Assuming 'reshaped_Gov_Nexus' and 'reshaped_Pol_Nexus' are your data frames
 merged <- bind_rows(reshaped_Gov_Nexus, reshaped_Pol_Nexus, .id = "Source") %>%
   group_by_all() %>%
@@ -941,6 +1093,81 @@ reshaped_Nexus_CrossCut <- pivot_wider(
 )
 #reshaped_CrossCut_Nexus$rowname <- rownames(reshaped_CrossCut_Nexus)
 
+#merged <- merged[, !colnames(merged) %in% "Food"]
+# Remove row where "nexus" is "food"
+#merged <- subset(merged, Nexus != "Food")
+merged_table_remove_names <- reshaped_Nexus_CrossCut
+merged_table_remove_names <- as.data.frame(merged_table_remove_names[2:ncol(merged_table_remove_names)])
+
+# Replace 'your_data_frame' with the name of your data frame
+merged_table_remove_names <- merged_table_remove_names %>%
+  select(sort(colnames(.)))
+
+# Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
+color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+
+# Replace all NAs with 0 in the entire dataframe
+merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
+
+# Calculate the total count for each column
+total_counts <- colSums(merged_table_remove_names)
+#total_counts <- sum(total_counts)
+# Your merged table
+test <- matrix(0, nrow = nrow(merged_table_remove_names), ncol = ncol(merged_table_remove_names)) # Example matrix dimension
+
+# Iterate over each column and divide by the corresponding total count
+for (i in 1:ncol(test)) {
+  test[,i] <- total_counts[i]
+}
+
+# Print the updated table
+print(merged_table_remove_names)
+# Convert counts to percentages
+merged_table_perc <- merged_table_remove_names / test * 100
+
+# Show the table with percentages
+print(merged_table_perc)
+
+# Create the heatmap
+heatmap_obj <- ComplexHeatmap::Heatmap(
+  as.matrix(merged_table_perc),
+  name = "Percentage 
+of occurences 
+for each nexus 
+combination",
+  col = color_palette,
+  cluster_rows = F,
+  cluster_columns = F,
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    grid.text(sprintf("%.0f", merged_table_perc[i, j]), x, y, gp = gpar(fontsize = 12))
+  },
+  row_labels = c(reshaped_Nexus_CrossCut$CrossCut),
+  show_row_names = TRUE,
+  show_column_names = TRUE,  # Turn off column labels at the bottom
+  column_names_rot = 40,
+  column_names_side = c("top"),
+  show_row_dend = FALSE,
+  #column_title = "Column Labels",  # Add a title for column labels
+  column_title_side = "top",  # Place the title at the top
+  column_title_gp = gpar(fontsize = 14),  # Customize the title font size
+  row_names_gp = gpar(fontsize = 12)
+)
+
+# Save the heatmap to a PNG file
+png("./heatmap_crosscut.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+print(heatmap_obj)
+dev.off()  # Close the PNG device
+
+
+
+
+
+
+
+
+
+
+
 # Use pivot_wider to reshape the data frame
 reshaped_Nexus_NChallenge <- pivot_wider(
   data = Nexus_NChallenge,
@@ -949,7 +1176,6 @@ reshaped_Nexus_NChallenge <- pivot_wider(
 )
 
 colnames(reshaped_Nexus_NChallenge)[1] <- "CrossCut"
-
 
 #reshaped_CrossCut_NChallenge$rowname <- rownames(reshaped_CrossCut_NChallenge)
 # Assuming 'reshaped_Gov_Nexus' and 'reshaped_Pol_Nexus' are your data frames
@@ -1024,6 +1250,9 @@ of studies",
 png("./heatmap_chal_crosscut2.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
+
+
+
 
 #Option 2
 # crosstab of governance approaches versus nexus elements (nexus elements merged)
