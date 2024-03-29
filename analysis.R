@@ -460,12 +460,14 @@ p <- ggplot(Challenges_Nexus) +
   ylim(-125, max(label_data$tot + 50, na.rm = TRUE)) +
   theme_minimal() +
   theme(
-    legend.position = "right",
+    legend.position = "bottom",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
     axis.text = element_blank(),
     axis.title = element_blank(),
     panel.grid = element_blank(),
     plot.margin = unit(rep(-1, 4), "cm")
-  ) + guides(fill = guide_legend(title = "Number of Nexus Elements")) +
+  ) + guides(fill = guide_legend(title = "Number of Nexus Elements:")) +
 
   coord_polar() +
 
@@ -477,7 +479,7 @@ p <- ggplot(Challenges_Nexus) +
   geom_text(data = base_data, aes(x = title, y = -18, label = NChallenge), hjust=c(1, 1, 0.75, 0, 0), colour = "black", alpha = 0.8, size = 4, fontface = "bold", inherit.aes = FALSE)
 
 # Save figure
-ggsave(p, file = "challenges_nexus_circular.jpg", width = 30, height = 20, units = "cm")
+ggsave(p, file = "challenges_nexus_circular.jpg", width = 25, height = 30, units = "cm")
 
 # create heatmap plots for figure on governance, policy instruments, and nexus challenges
 
