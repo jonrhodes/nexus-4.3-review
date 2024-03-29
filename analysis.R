@@ -483,21 +483,24 @@ ggsave(p, file = "challenges_nexus_circular.jpg", width = 25, height = 30, units
 
 # create heatmap plots for figure on governance, policy instruments, and nexus challenges
 
+# reclass governance types to include "Other"
+Data_Select_Split_GovRcl <- Data_Select_Split %>% mutate(Gov = map(Gov, .f = function (x) {ifelse((x == "Community Governance" | x == "Hierarchical Governance" | x == "Market Governance" | x == "Network Governance"), x, "Other")}))
+
 # get all unique nexus challenges
-Unique_Challenges <- sort(unique(unlist(Data_Select_Split$NChallenge)))[c(1, 3, 5, 4, 2)]
+Unique_Challenges <- sort(unique(unlist(Data_Select_Split_GovRcl$NChallenge)))[c(1, 3, 5, 4, 2)]
 
 # get all unique governance types
-Unique_Governance <- sort(unique(unlist(Data_Select_Split$Gov)))[c(2, 3, 4, 1, 5)]
+Unique_Governance <- sort(unique(unlist(Data_Select_Split_GovRcl$Gov)))[c(2, 3, 4, 1, 5)]
 
 # get all unique policy instruments
-Unique_Policy <- sort(unique(unlist(Data_Select_Split$Policy)))[c(1, 2, 4, 3)]
+Unique_Policy <- sort(unique(unlist(Data_Select_Split_GovRcl$Policy)))[c(1, 2, 4, 3)]
 
 Matrix_List <- list()
 # loop through unique challenges and get governance types and policy instruments combinations
 for (i in 1:length(Unique_Challenges)) {
 
   # get rows in data that match this challenge
-  ThisChallenge <- Data_Select_Split[which(unlist(Data_Select_Split$NChallenge %>% map(.f = function(x) {return(any(x == Unique_Challenges[i]))}))),]
+  ThisChallenge <- Data_Select_Split_GovRcl[which(unlist(Data_Select_Split_GovRcl$NChallenge %>% map(.f = function(x) {return(any(x == Unique_Challenges[i]))}))),]
 
   # get the cross-tabbed matrix of governance approaches versus policy intruments for this challenge
   # ensure missing categories are included by using factors
