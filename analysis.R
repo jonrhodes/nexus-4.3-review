@@ -517,11 +517,13 @@ for (i in 1:length(Unique_Challenges)) {
   PlotData <- as_tibble(Matrix_List[[i]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy))
 
   ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
-    geom_tile(color = "white", lwd = 4, linetype = 1) +
+    geom_tile(color = "white", lwd = 4, linetype = 1) + geom_text(size = 10, color = "black") +
     theme_minimal() +
-    scale_fill_gradientn(colours = c("#D9AA80", "#B65719", "#791E32"), limits = c(0, 32)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
+    scale_fill_gradientn(colours = c("#D9AA80", "#C3773E", "#B65719"), limits = c(0, 32)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
   ggsave(paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
+
+#c("#D9AA80", "#B65719", "#791E32")
 
 # create a special template plot
 PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
