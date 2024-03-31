@@ -444,7 +444,7 @@ grid_data <- grid_data[-1,]
 p <- ggplot(Challenges_Nexus) +
 
   # Add the stacked bar
-  geom_bar(aes(x = as.factor(id), y = value, fill = observation), stat="identity", alpha = 0.5) + scale_fill_manual(values = c("#B65719", "#C6D68A", "#791E32", "#4A928F")) +
+  geom_bar(aes(x = as.factor(id), y = value, fill = observation), stat="identity", alpha = 1) + scale_fill_manual(values = c("#B65719", "#C6D68A", "#791E32", "#4A928F")) +
 
   # Add a val = 125/100/75/50/25/0 lines. I do it at the beginning to make sure barplots are OVER it.
   geom_segment(data = grid_data, aes(x = end, y = 0, xend = start, yend = 0), colour = "grey", alpha = 1, size = 0.3 , inherit.aes = FALSE) +
