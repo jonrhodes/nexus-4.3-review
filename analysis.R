@@ -560,7 +560,9 @@ colnames(region_counts)[colnames(region_counts) == "Region"] <- "Sub.region.Name
 merged_data <- merge(merged_data, region_counts, by = "Sub.region.Name")
 
 # Define the color scale from red (highest) to yellow (lowest)
-color_scale <-  scale_fill_gradientn(colors = c("#D9AA80", "#B65719", "#791E32"))
+#color_scale <-  scale_fill_gradientn(colors = c("#D9AA80", "#B65719", "#791E32"))
+
+color_scale <-  scale_fill_gradientn(colors = c("#D9AA80", "#C3773E", "#B65719"))
 
 # Plot the shapefile without displaying country polygon borders
 my_plot <- ggplot(data = merged_data) +
@@ -570,7 +572,7 @@ my_plot <- ggplot(data = merged_data) +
   theme_minimal()
 
 # Export the ggplot as a PNG image
-ggsave(filename = "./studies_region_counts.png", plot = my_plot, width = 6, height = 4, dpi = 300)
+ggsave(filename = "./studies_region_counts_300324.png", plot = my_plot, width = 6, height = 4, dpi = 300)
 
 
 
@@ -633,7 +635,8 @@ merged_table_perc <- merged_table_remove_names / test * 100
 print(merged_table_perc)
 
 # Define the color palette
-color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+#color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+color_palette <-  colorRampPalette(c("#D9AA80", "#C3773E", "#B65719"))(100)
 
 #merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
 
@@ -659,11 +662,12 @@ combination",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 10)
+  row_names_gp = gpar(fontsize = 10),
+  row_names_side = "left"
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_elements_policy.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+png("./heatmap_elements_policy_300324.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 #Some final touches in ppt
@@ -683,6 +687,16 @@ remaining_rows <- reshaped_Gov_Nexus %>% filter(!Gov %in% specified_categories)
 reshaped_Gov_Nexus_reordered <- bind_rows(specified_rows, remaining_rows)
 # View the first few rows to check the new order
 head(reshaped_Gov_Nexus_reordered)
+# Assuming your dataset is named 'reshaped_Gov_Nexus_reordered'
+subset_data <- reshaped_Gov_Nexus_reordered %>%
+  slice(1:4) 
+subset_data <- as.data.frame(subset_data)
+# Filter columns with at least one non-zero value
+filtered_columns <- subset_data %>%
+  select(where(function(x) any(x != 0)))
+
+reshaped_Gov_Nexus_reordered <- filtered_columns
+
 merged <- reshaped_Gov_Nexus_reordered
 
 merged_table_remove_names <- reshaped_Gov_Nexus_reordered
@@ -716,8 +730,8 @@ merged_table_perc <- merged_table_remove_names / test * 100
 print(merged_table_perc)
 
 # Define the color palette
-color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
-
+#color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+color_palette <-  colorRampPalette(c("#D9AA80", "#C3773E", "#B65719"))(100)
 #merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
 
 # Create the heatmap
@@ -742,11 +756,12 @@ combination",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 10)
+  row_names_gp = gpar(fontsize = 10),
+  row_names_side = "left"
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_elements_gov.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+png("./heatmap_elements_gov_300324.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 #Some final touches in ppt
@@ -805,7 +820,8 @@ print(merged_table_perc)
 
 
 # Define the color palette
-color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+#color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+color_palette <-  colorRampPalette(c("#D9AA80", "#C3773E", "#B65719"))(100)
 
 #merged_gov_string <- c(reshaped_Gov_Nexus$Gov, reshaped_Pol_Nexus$Gov)
 
@@ -829,12 +845,13 @@ of studies",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 10)
+  row_names_gp = gpar(fontsize = 10),
+  row_names_side = "left"
 )
 
 
 # Save the heatmap to a PNG file
-png("./heatmap_elements_governance_policy1.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
+png("./heatmap_elements_governance_policy_300324.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 #Some final touches in ppt
@@ -987,7 +1004,8 @@ merged_table_remove_names <- merged_table_remove_names %>%
   select(sort(colnames(.)))
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+#color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+color_palette <-  colorRampPalette(c("#D9AA80", "#C3773E", "#B65719"))(100)
 
 # Replace all NAs with 0 in the entire dataframe
 merged_table_remove_names[is.na(merged_table_remove_names)] <- 0
@@ -1033,11 +1051,12 @@ combination",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 12)
+  row_names_gp = gpar(fontsize = 12),
+  row_names_side = "left"
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_crosscut.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_crosscut_300324.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
@@ -1257,8 +1276,8 @@ print(merged_table_perc)
 
 
 # Specify the color palette you want to use (e.g., "viridis" or "RdYlBu")
-color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
-
+#color_palette <- colorRampPalette(c("#D9AA80", "#B65719", "#791E32"))(100)
+color_palette <-  colorRampPalette(c("#D9AA80", "#C3773E", "#B65719"))(100)
 # Original vector
 actors <- c(
   "Civil Society and 
@@ -1296,11 +1315,12 @@ of studies",
   #column_title = "Column Labels",  # Add a title for column labels
   column_title_side = "top",  # Place the title at the top
   column_title_gp = gpar(fontsize = 14),  # Customize the title font size
-  row_names_gp = gpar(fontsize = 12)
+  row_names_gp = gpar(fontsize = 12),
+  row_names_side = "left"
 )
 
 # Save the heatmap to a PNG file
-png("./heatmap_actors1.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
+png("./heatmap_actors_300324.png", width = 8000, height = 6000, res = 600)  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 
@@ -1534,7 +1554,7 @@ names(Challenges) <- c("Nexus Challenges")
 # map onto new nexus challenges
 Lookup <- read_csv("challenge_lookup.csv")
 Challenges <- Challenges %>% left_join(Lookup, by = join_by(`Nexus Challenges` == `Original`)) %>%
-                  select(-`Nexus Challenges`) %>% rename('Nexus Challenges' = New)
+  select(-`Nexus Challenges`) %>% rename('Nexus Challenges' = New)
 ggplot(Challenges, aes(x = `Nexus Challenges`, fill = `Nexus Challenges`)) + geom_bar() + theme(legend.position = "none") + labs(y = "Count") + theme(axis.text.x = element_text(angle = -90, hjust = 0))
 ggsave("challenges.jpg", width = 10, height = 15, units = "cm")
 
