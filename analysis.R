@@ -24,7 +24,7 @@ Refs <- read_csv("review_283729_included_csv_20240320131744.csv")
 # get the references for grey literature
 RefsGrey <- Refs %>% select('Covidence #', Tags) %>% filter(Tags == "Grey Literature")
 
-# joint to data
+# join to data
 JoinedData <- Data %>% left_join(RefsGrey, by = join_by(`Covidence #`))
 
 # split data into peer reviewed and grey literature sets
@@ -98,6 +98,10 @@ Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
                        if (all(is.na(y$NChallenge_New))) {return(as.vector(y$NChallenge_New))} else
                        {return(as.vector(filter(y, !is.na(NChallenge_New))$NChallenge_New))}}))
 
+# remove duplicates
+Data_Select_Split <- Data_Select_Split %>% mutate(NChallenge = map(NChallenge,
+                           .f = function(x) {if (length(x) > 1) {return(unique(x))} else {return(x)}}))
+
 # recategorise governance appraoches - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
 
 # get look up table so as to rename governance types
@@ -158,6 +162,10 @@ Data_Select_Split <- Data_Select_Split %>% mutate(Gov = map(Gov,
                           {return(as.vector(filter(y, !is.na(Gov_New))$Gov_New))}
                      }))
 
+# remove duplicates
+Data_Select_Split <- Data_Select_Split %>% mutate(Gov = map(Gov,
+                           .f = function(x) {if (length(x) > 1) {return(unique(x))} else {return(x)}}))
+
 # remove "other" category from policy instruments - change code here to avoid this or to do something else
 Data_Select_Split <- Data_Select_Split %>% mutate(Policy = map(Policy,
                         .f = function(x) {if (all(is.na(x))) {return(NA)} else
@@ -167,6 +175,10 @@ Data_Select_Split <- Data_Select_Split %>% mutate(Policy = map(Policy,
                           if (all(is.na(y$Policy))) {return(as.vector(y$Policy))} else
                           {return(as.vector(filter(y, !is.na(Policy))$Policy))}
                         }}))
+
+# remove duplicates
+Data_Select_Split <- Data_Select_Split %>% mutate(Policy = map(Policy,
+                           .f = function(x) {if (length(x) > 1) {return(unique(x))} else {return(x)}}))
 
 # recategorise actors - note that this removes "other" responses - change code here to avoid this or to do something else
 
@@ -195,6 +207,10 @@ Data_Select_Split <- Data_Select_Split %>% mutate(Actors = map(Actors,
                      .f = function(x) {y <- as_tibble(x) %>% left_join(LookupAct, by = join_by(value == Actors)) %>% select(-value);
                        if (all(is.na(y$Actors_New))) {return(as.vector(y$Actors_New))} else
                        {return(as.vector(filter(y, !is.na(Actors_New))$Actors_New))}}))
+
+# remove duplicates
+Data_Select_Split <- Data_Select_Split %>% mutate(Actors = map(Actors,
+                           .f = function(x) {if (length(x) > 1) {return(unique(x))} else {return(x)}}))
 
 # recategorise cross-cutting issues - note that this creates new categories based on the "other" responses - change code here to avoid this or to do something else
 
@@ -265,6 +281,10 @@ Data_Select_Split <- Data_Select_Split %>% mutate(CrossCut = map(CrossCut,
                         if (all(is.na(y$CrossCut_New))) {return(as.vector(y$CrossCut_New))} else
                           {return(as.vector(filter(y, !is.na(CrossCut_New))$CrossCut_New))}
                      }))
+
+# remove duplicates
+Data_Select_Split <- Data_Select_Split %>% mutate(CrossCut = map(CrossCut,
+                           .f = function(x) {if (length(x) > 1) {return(unique(x))} else {return(x)}}))
 
 # summarise paper types
 
@@ -516,11 +536,11 @@ for (i in 1:length(Unique_Challenges)) {
 
   PlotData <- as_tibble(Matrix_List[[i]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy))
 
-  ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
+  p <- ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
     geom_tile(color = "white", lwd = 4, linetype = 1) + geom_text(size = 10, color = "black") +
     theme_minimal() +
     scale_fill_gradientn(colours = c("#D9AA80", "#C3773E", "#B65719"), limits = c(0, 32)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
-  ggsave(paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
+  ggsave(p, file = paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
 
 #c("#D9AA80", "#B65719", "#791E32")
@@ -528,12 +548,12 @@ for (i in 1:length(Unique_Challenges)) {
 # create a special template plot
 PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
-ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
+p <- ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
    geom_tile(color = "black", lwd = 1, linetype = 1) +
    theme_minimal() +
    scale_fill_gradientn(colours = c("white"), limits = c(0, 0)) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y = element_blank()) + theme(legend.position = "none")
 
-ggsave("Template.jpg", width = 10, height = 10, units = "cm")
+ggsave(p, file = "Template.jpg", width = 10, height = 10, units = "cm")
 
 #Code to create figure 4.11 - Geographic distribution of studies
 #Can download shp file here (not official UN data): https://thematicmapping.org/downloads/world_borders.php
@@ -573,9 +593,6 @@ my_plot <- ggplot(data = merged_data) +
 
 # Export the ggplot as a PNG image
 ggsave(filename = "./studies_region_counts_300324.png", plot = my_plot, width = 6, height = 4, dpi = 300)
-
-
-
 
 #Code to create figure 4.13 - heatmap showing nexus elements, governance types and policy instruments
 #Option 1
