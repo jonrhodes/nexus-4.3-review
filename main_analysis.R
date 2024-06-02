@@ -31,7 +31,7 @@ JoinedData <- Data %>% left_join(RefsGrey, by = join_by(`Covidence #`))
 Data <- filter(JoinedData, is.na(Tags)) %>% select(-Tags)
 Data_Grey <- filter(JoinedData, !is.na(Tags)) %>% select(-Tags)
 
-# extract data on paper types, regions, scale, nexus elements, nexus challnenges
+# extract data on paper types, regions, scale, nexus elements, nexus challenges
 # governance types, policy instruments, actors, and cross cutting issues
 Data_Select <- Data %>%
               select(CovidenceID = `Covidence #`, Title, PaperType = `What type of paper is this?`, Region = `Select all geographic regions the paper focusses on according to UN standard area codes (https://unstats.un.org/unsd/methodology/m49/)`, Scale = `Select the relevant spatial scales (extent) of the study. Choose all that apply.`, Nexus = `Which nexus elements are considered?`, NChallenge = `Does the study provide evidence for addressing any of the following nexus challenges?`, Gov = `Are any of the following governance approaches proposed or assessed as solutions to the above nexus challenges? Use your judgement to select one of the four governance approaches listed and then use the \"other\" category to list any specific governance approaches referred to in the study (separate multiple governance approaches with \",\")`, Policy = `What type of policy instruments are considered to operationalise the response options proposed or assessed?`, Actors = `Which types of actors are involved in the implementation of the response options proposed or assessed?`, CrossCut = `Which of the following cross cutting issues are considered?`)
