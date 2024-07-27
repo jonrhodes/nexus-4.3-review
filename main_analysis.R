@@ -483,13 +483,16 @@ p <- ggplot(Challenges_Nexus) +
   ylim(-125, max(label_data$tot + 50, na.rm = TRUE)) +
   theme_minimal() +
   theme(
-    legend.position = "bottom",
+    #legend.position = "bottom",
+    legend.position = c(0.35, 0.1),
+    legend.justification = c("left", "top"),
+    legend.direction = "horizontal",
     legend.text = element_text(size = 12),
     legend.title = element_text(size = 12),
     axis.text = element_blank(),
     axis.title = element_blank(),
     panel.grid = element_blank(),
-    plot.margin = unit(rep(-1, 4), "cm")
+    plot.margin = unit(rep(-5, 4), "cm")
   ) + guides(fill = guide_legend(title = "Number of Nexus Elements:")) +
 
   coord_polar() +
