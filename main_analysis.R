@@ -36,6 +36,9 @@ Data_Grey <- filter(JoinedData, !is.na(Tags)) %>% select(-Tags)
 Data_Select <- Data %>%
               select(CovidenceID = `Covidence #`, Title, PaperType = `What type of paper is this?`, Region = `Select all geographic regions the paper focusses on according to UN standard area codes (https://unstats.un.org/unsd/methodology/m49/)`, Scale = `Select the relevant spatial scales (extent) of the study. Choose all that apply.`, Nexus = `Which nexus elements are considered?`, NChallenge = `Does the study provide evidence for addressing any of the following nexus challenges?`, Gov = `Are any of the following governance approaches proposed or assessed as solutions to the above nexus challenges? Use your judgement to select one of the four governance approaches listed and then use the \"other\" category to list any specific governance approaches referred to in the study (separate multiple governance approaches with \",\")`, Policy = `What type of policy instruments are considered to operationalise the response options proposed or assessed?`, Actors = `Which types of actors are involved in the implementation of the response options proposed or assessed?`, CrossCut = `Which of the following cross cutting issues are considered?`)
 
+# change "Climate" to "Climate change" in nexus elements
+Data_Select <- Data_Select %>% mutate(Nexus = str_replace_all(Nexus, "Climate", "Climate change"))
+
 # save data for manual error checking - we used this to ckeck for errors and correct in
 # covidence where necessary
 write_csv(Data_Select, "error_check.csv")
@@ -683,13 +686,11 @@ combination",
   row_names_side = "left"
 )
 
-
 # Save the heatmap to a PNG file
 png("./heatmap_elements_policy_300324.png", width = 6000, height = 6000, res = 600 )  # Adjust width and height as needed
 print(heatmap_obj)
 dev.off()  # Close the PNG device
 #Some final touches in ppt
-
 
 #Governance
 colnames(reshaped_Gov_Nexus)[1] <- "Gov"
