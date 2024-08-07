@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------
 # Script Name: function_nice_heatmap.R
 # Author: Améline Vallet  (ameline.vallet@agroparistech.fr)
-# Latest update : 20240411
+# Latest update : 20240806
 # Description: This script contains a function for plotting nice heatmaps from the clean database in csv format
 # ------------------------
 
@@ -10,15 +10,52 @@
 
 #A function with the clean database as input, as well as the variable of interest to plot against nexus dimensions. 
 produce_chpt4_heatmaps <- function(Data, var, levels_y, labels_y) {
+  
+  nexus_order <- c("Biodiversity", "Water", "Food", "Health", "Climate change")
+  
   nexus <- Data %>%
     filter(name %in% c("Nexus")) %>%
     select(-name, - Title) %>%
+    mutate(value = factor(value, levels = nexus_order)) %>%
+    arrange(CovidenceID, value) %>%
     group_by(CovidenceID) %>%
     nest(data = value) %>%
     mutate(nexus_nice = map_chr(.x = data, .f = function(x) {paste(pull(x), collapse = ' ')})) %>%
+    mutate(nexus_not_nice = map_chr(.x = data, .f = function(x) {paste(pull(x), collapse = '_')})) %>%
     select(-data)
-
-  ref_grid <- expand.grid(nexus_nice = unique(nexus$nexus_nice), 
+  
+  nexus_order_combi <- c(
+  #two dimensions
+  "Biodiversity Water", 
+  "Biodiversity Food", 
+  "Biodiversity Health",
+  "Biodiversity Climate change",
+  "Water Food",
+  "Water Health",
+  "Water Climate change",
+  "Food Health",
+  "Food Climate change",  
+  "Health Climate change",   
+  
+  #3 dimensions
+  "Biodiversity Water Food", 
+  "Biodiversity Water Health", 
+  "Biodiversity Water Climate change",
+  "Biodiversity Food Climate change",  
+  "Water Food Health",
+  "Water Food Climate change",
+  "Food Health Climate change",   
+  
+  #4 dimensions
+  "Biodiversity Water Food Health", 
+  "Biodiversity Water Food Climate change",
+  "Biodiversity Food Health Climate change", 
+  "Water Food Health Climate change", 
+  
+  #5 dimensions        
+  "Biodiversity Water Food Health Climate change")
+                         
+  ref_grid <- expand.grid(nexus_nice = nexus_order_combi, 
                           var = levels_y)
   
   #Process the data for plotting
@@ -37,18 +74,20 @@ produce_chpt4_heatmaps <- function(Data, var, levels_y, labels_y) {
     mutate(percent = ifelse(is.na(percent), 0, percent))
   
   #Create artificial data to graphically represent nexus dimensions in the header of the figure
-  my_data <- tibble(nexus_nice = unique(nexus$nexus_nice), var = unique(nexus$nexus_nice)) %>%
-    mutate(var = str_split(var, " ")) %>%
+  my_data <- tibble(nexus_nice = unique(nexus$nexus_nice), var = unique(nexus$nexus_not_nice)) %>%
+    mutate(var = str_split(var, "_")) %>%
     unnest(var) %>%
     add_column(count = NA, percent = NA)  
   
   #Combine the artificial data to the data to plot
   combi <- bind_rows(data_graph, my_data) %>%
-    mutate(var = factor(var, levels = c(levels_y, rev(c("Biodiversity", "Climate", "Food", "Health", "Water"))))) %>%
+    #mutate(var = factor(var, levels = c(levels_y, rev(c("Biodiversity", "Climate change", "Food", "Health", "Water"))))) %>%  Biodiversity, Water, Food, Health, Climate change. 
+    mutate(var = factor(var, levels = c(levels_y, rev(c("Biodiversity", "Water", "Food", "Health", "Climate change"))))) %>%
     mutate(var_num = as.numeric(var)) %>%
-    mutate(nexus_nice = factor(nexus_nice, levels = sort(unique(nexus$nexus_nice)))) %>%
+    mutate(nexus_nice = factor(nexus_nice, levels = sort(unique(nexus$nexus_nice)))) %>% 
+    mutate(nexus_nice = factor(nexus_nice, levels = nexus_order_combi)) %>% 
     mutate(nexus_nice_num = as.numeric(nexus_nice)) %>%
-    mutate(height = ifelse(var %in% c("Biodiversity", "Climate", "Food", "Health", "Water"), 1, 2)) %>%
+    mutate(height = ifelse(var %in% c("Biodiversity", "Climate change", "Food", "Health", "Water"), 1, 2)) %>%
     mutate(var = plyr::mapvalues(var, from = levels_y, to = labels_y)) %>%
     arrange(var, nexus_nice_num)
   
@@ -71,7 +110,7 @@ produce_chpt4_heatmaps <- function(Data, var, levels_y, labels_y) {
     #scale_fill_gradient(low = "#D9AA80", high = "#791E32", limits = c(1, max(data_graph$percent)), na.value = NA, name = "Percentage of \noccurrences") +
     scale_fill_gradient(low = "#D9AA80", high = "#B65719", name = "Percentage of \noccurrences" , na.value = NA) +
     geom_point(data = filter(combi, var == "Biodiversity"), colour = "#C6D68A", shape = 19, size = 4) +
-    geom_point(data = filter(combi, var == "Climate"), colour = "#BAB0C9", shape = 19, size = 4) +
+    geom_point(data = filter(combi, var == "Climate change"), colour = "#BAB0C9", shape = 19, size = 4) +
     geom_point(data = filter(combi, var == "Food"), colour = "#B65719", shape = 19, size = 4) +
     geom_point(data = filter(combi, var == "Health"), colour = "#791E32", shape = 19, size = 4) +
     geom_point(data = filter(combi, var == "Water"), colour = "#4A928F", shape = 19, size = 4) +
@@ -81,7 +120,7 @@ produce_chpt4_heatmaps <- function(Data, var, levels_y, labels_y) {
     theme_bw() +
     theme(axis.ticks = element_blank(), axis.line = element_blank(), panel.grid = element_blank(), panel.border = element_blank(), 
           axis.title = element_blank(), axis.text.x = element_blank(),
-          axis.text.y = element_text(face = c(rep("plain", length(levels_y)), rep("bold.italic", 5)), colour = c(rep("black", length(levels_y)), "#4A928F", "#791E32", "#B65719", "#BAB0C9", "#C6D68A")),
+          axis.text.y = element_text(face = c(rep("plain", length(levels_y)), rep("bold.italic", 5)), colour = c(rep("black", length(levels_y)), "#BAB0C9", "#791E32", "#B65719", "#4A928F", "#C6D68A")),
           legend.position = "bottom")
   
   # #with png logos for nexus elements
