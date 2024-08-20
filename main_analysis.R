@@ -567,14 +567,14 @@ ggsave(p, file = "Template.jpg", width = 10, height = 10, units = "cm")
 #Can download the UN country to region table here: https://unstats.un.org/unsd/methodology/m49/overview/
 # https://data.unhabitat.org/search?collection=Dataset&q=M49%20regions
 # Read the countries shapefile 
-shp_data <- st_read("D:/IPBES_review/data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
+shp_data <- st_read("E:/IPBES_review/data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
 # Transform the projection to Mollweide (EPSG:54009)
 shp_data <- st_transform(shp_data, crs = "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
 # Rename the column in shp_data to match the UN table
 shp_data <- shp_data %>%
   rename(ISO.alpha3.Code = ISO3)
 # Read the UN table file into a data frame
-csv_data <- read.csv("D:/IPBES_review/data/UNSD — Methodology.csv", sep = ";")
+csv_data <- read.csv("E:/IPBES_review/data/UNSD — Methodology.csv", sep = ";")
 #Merge together
 merged_data <- merge(shp_data, csv_data, by = "ISO.alpha3.Code")
 
@@ -598,7 +598,7 @@ my_plot <- ggplot(data = merged_data) +
   theme_minimal()
 
 # Export the ggplot as a PNG image
-ggsave(filename = "./studies_region_counts_300324.png", plot = my_plot, width = 6, height = 4, dpi = 300)
+ggsave(filename = "./studies_region_counts_300324.eps", plot = my_plot, width = 6, height = 4, dpi = 300)
 
 
 ##New heatmaps with Ameline's code
