@@ -415,7 +415,7 @@ write_csv(Actorss, "actors_counts.csv")
 
 # create some plots
 
-# get circular plot of nexus challenges versus nexus elements
+# get circular plot of nexus challenges versus nexus elements - figure 4.5
 
 # code modified from https://r-graph-gallery.com/299-circular-stacked-barplot.html
 
@@ -504,10 +504,11 @@ p <- ggplot(Challenges_Nexus) +
   geom_segment(data = base_data, aes(x = start, y = -5, xend = end, yend = -5), colour = "black", alpha = 0.8, size = 0.6 , inherit.aes = FALSE) +
   geom_text(data = base_data, aes(x = title, y = -18, label = NChallenge), hjust=c(1, 1, 0.75, 0, 0), colour = "black", alpha = 0.8, size = 4, fontface = "bold", inherit.aes = FALSE)
 
-# Save figure
+# Save figure as jpg and eps format
 ggsave(p, file = "challenges_nexus_circular.jpg", width = 25, height = 30, units = "cm")
+ggsave(p, file = "challenges_nexus_circular.eps", width = 25, height = 30, units = "cm")
 
-# create heatmap plots for figure on governance, policy instruments, and nexus challenges
+# create heatmap plots for figure on governance, policy instruments, and nexus challenges - figure 4.4
 
 # reclass governance types to include "Other"
 Data_Select_Split_GovRcl <- Data_Select_Split %>% mutate(Gov = map(Gov, .f = function (x) {ifelse((x == "Community Governance" | x == "Hierarchical Governance" | x == "Market Governance" | x == "Network Governance"), x, "Other")}))
@@ -549,8 +550,6 @@ for (i in 1:length(Unique_Challenges)) {
   ggsave(p, file = paste(names(Matrix_List)[i], ".jpg", sep = ""), width = 10, height = 10, units = "cm")
 }
 
-#c("#D9AA80", "#B65719", "#791E32")
-
 # create a special template plot
 PlotData <- as_tibble(Matrix_List[[1]]) %>% mutate(Gov = factor(Gov, levels = rev(Unique_Governance)), Policy = factor(Policy, levels = Unique_Policy)) %>% mutate(n = 0)
 
@@ -561,7 +560,7 @@ p <- ggplot(PlotData, aes(Policy, Gov, col = n, fill = n, label = n)) +
 
 ggsave(p, file = "Template.jpg", width = 10, height = 10, units = "cm")
 
-#Code to create figure 4.11 - Geographic distribution of studies
+#Code to create figure 4.3 - Geographic distribution of studies
 #Can download shp file here (not official UN data): https://thematicmapping.org/downloads/world_borders.php
 #Can download the official UN shpfile here (but it only goes to region, not the subregions that we use): https://data.unhabitat.org/datasets/GUO-UN-Habitat::m49-regions/about
 #Can download the UN country to region table here: https://unstats.un.org/unsd/methodology/m49/overview/
@@ -597,8 +596,12 @@ my_plot <- ggplot(data = merged_data) +
   labs(title = "Number of studies in each region", fill = "Count") +
   theme_minimal()
 
-# Export the ggplot as a PNG image
+# Export the ggplot as a png and an eps image
+ggsave(filename = "./studies_region_counts_300324.png", plot = my_plot, width = 6, height = 4, dpi = 300)
 ggsave(filename = "./studies_region_counts_300324.eps", plot = my_plot, width = 6, height = 4, dpi = 300)
+
+
+# BELOW IS ALL OLD STUFF - IT THINK NOW IN AMELINE'S CODE BUT NEED TO CHECK
 
 
 ##New heatmaps with Ameline's code
