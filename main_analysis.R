@@ -566,14 +566,14 @@ ggsave(p, file = "Template.jpg", width = 10, height = 10, units = "cm")
 #Can download the UN country to region table here: https://unstats.un.org/unsd/methodology/m49/overview/
 # https://data.unhabitat.org/search?collection=Dataset&q=M49%20regions
 # Read the countries shapefile 
-shp_data <- st_read("E:/IPBES_review/data/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
+shp_data <- st_read("./TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp")
 # Transform the projection to Mollweide (EPSG:54009)
 shp_data <- st_transform(shp_data, crs = "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")
 # Rename the column in shp_data to match the UN table
 shp_data <- shp_data %>%
   rename(ISO.alpha3.Code = ISO3)
 # Read the UN table file into a data frame
-csv_data <- read.csv("E:/IPBES_review/data/UNSD — Methodology.csv", sep = ";")
+csv_data <- read.csv("./UNSD — Methodology.csv", sep = ";")
 #Merge together
 merged_data <- merge(shp_data, csv_data, by = "ISO.alpha3.Code")
 
@@ -601,11 +601,12 @@ ggsave(filename = "./studies_region_counts_300324.png", plot = my_plot, width = 
 ggsave(filename = "./studies_region_counts_300324.eps", plot = my_plot, width = 6, height = 4, dpi = 300)
 
 
-# BELOW IS ALL OLD STUFF - IT THINK NOW IN AMELINE'S CODE BUT NEED TO CHECK
+# BELOW IS ALL OLD STUFF - IT THINK NOW IN AMELINE'S CODE BUT NEED TO CHECK --> Hi Jonathan, this is new, these figures I created using her code (they are not in her code)
 
 
 ##New heatmaps with Ameline's code
-clean_data <- read.csv("/clean_database.csv")
+#Ameline created this to run with her code
+clean_data <- read.csv("./clean_database.csv")
 # Assuming clean_data is your dataframe
 #clean_data$value <- gsub("Climate", "Climate change", clean_data$value)
 # Display the head of the dataframe to check the changes
@@ -615,21 +616,24 @@ instrument_list <- c("Economic and Financial Instruments", "Legal and Regulatory
 instrument_list_labels <- c("Economic and financial", "Legal and regulatory" , "Social and behavioral", "Rights-based")
 source("function_nice_heatmap.R")
 graph_instr <- produce_chpt4_heatmaps(clean_data, var = "Policy", levels_y = rev(instrument_list), labels_y = rev(instrument_list_labels))$graph
-ggsave("/elements_policy_v2.png", width = 190, height = 90, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_policy_v2.png", width = 190, height = 90, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_policy_v2.esp", width = 190, height = 90, dpi = 300, units = "mm" , bg="white")
 
 #Elements and crosscut
 crosscut_list <- c("Civil Rights", "Corruption" , "Disaster Recovery", "Economy", "Education", "Employment", "Energy", "Equity", "Gender", "ILK", "Infrastructure", "Justice", "Land", "Livelihoods", "Migration", "Politics and Democracy", "Population Growth", "Poverty", "Power Dynamics", "Resilience", "Rule of Law", "Security", "Social Cohesion", "Technology", "Tourism", "Trade", "Urbanisation", "Waste")
 crosscut_list_labels <- c("Civil Rights", "Corruption" , "Disaster Recovery", "Economy", "Education", "Employment", "Energy", "Equity", "Gender", "ILK", "Infrastructure", "Justice", "Land", "Livelihoods", "Migration", "Politics and Democracy", "Population Growth", "Poverty", "Power Dynamics", "Resilience", "Rule of Law", "Security", "Social Cohesion", "Technology", "Tourism", "Trade", "Urbanisation", "Waste")
 source("function_nice_heatmap.R")
 produce_chpt4_heatmaps(clean_data, var = "CrossCut", levels_y = rev(crosscut_list), labels_y = rev(crosscut_list_labels))$graph
-ggsave("/elements_crosscut_v2.png", width = 190, height = 260, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_crosscut_v2.png", width = 190, height = 260, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_crosscut_v2.esp", width = 190, height = 260, dpi = 300, units = "mm" , bg="white")
 
 #Elements and governance
 gov_list <- c("Adaptive Governance", "Biocultural Governance" , "Centralised Governance", "Collaborative Governance", "Community Governance", "Consumption-based Governance", "Coordinated Governance", "Cross-sectoral Governance", "Decentralised Governance", "Hierarchical Governance", "Integrative Governance", "Market Governance", "Meta-governance", "Multi-lateral Governance", "Multi-level Governance", "Multi-modal Governance", "Nested Governance", "Network Governance", "Nexus Governance", "Participatory Governance", "Polycentric Governance", "Reflexive Governance", "Resource-based Governance", "System Governance", "Transboundary Governance")
 gov_list_labels <- c("Adaptive Governance", "Biocultural Governance" , "Centralised Governance", "Collaborative Governance", "Community Governance", "Consumption-based Governance", "Coordinated Governance", "Cross-sectoral Governance", "Decentralised Governance", "Hierarchical Governance", "Integrative Governance", "Market Governance", "Meta-governance", "Multi-lateral Governance", "Multi-level Governance", "Multi-modal Governance", "Nested Governance", "Network Governance", "Nexus Governance", "Participatory Governance", "Polycentric Governance", "Reflexive Governance", "Resource-based Governance", "System Governance", "Transboundary Governance")
 source("function_nice_heatmap.R")
 produce_chpt4_heatmaps(clean_data, var = "Gov", levels_y = rev(gov_list), labels_y = rev(gov_list_labels))$graph
-ggsave("/elements_gov_v2.png", width = 190, height = 240, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_gov_v2.png", width = 190, height = 240, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_gov_v2.esp", width = 190, height = 240, dpi = 300, units = "mm" , bg="white")
 
 #Elements and governance categories
 # Subset the dataframe using dplyr
@@ -638,15 +642,16 @@ gov_list <- c("Community Governance", "Hierarchical Governance", "Market Governa
 gov_list_labels <- c("Community Governance", "Hierarchical Governance", "Market Governance", "Network Governance")
 source("function_nice_heatmap.R")
 produce_chpt4_heatmaps(clean_data_filtered, var = "Gov", levels_y = rev(gov_list), labels_y = rev(gov_list_labels))$graph
-ggsave("/elements_gov_cats_v2.png", width = 190, height = 100, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_gov_cats_v2.png", width = 190, height = 100, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_gov_cats_v2.esp", width = 190, height = 100, dpi = 300, units = "mm" , bg="white")
 
 #Elements and actors
 actors_list <- c("Civil Society and Community-Based Organisations", "Financial Institutions", "Global/Regional Institutions and Science-Policy Interfaces", "IPLCs", "Knowledge and Educational Communities", "Local/National Governments and Municipalities", "Media and the Arts", "Private Sector and Business Organisations")
 actors_list_labels <- c("Civil Society and Community-Based Organisations", "Financial Institutions", "Global/Regional Institutions and Science-Policy Interfaces", "IPLCs", "Knowledge and Educational Communities", "Local/National Governments and Municipalities", "Media and the Arts", "Private Sector and Business Organisations")
 source("function_nice_heatmap.R")
 produce_chpt4_heatmaps(clean_data, var = "Actors", levels_y = rev(actors_list), labels_y = rev(actors_list_labels))$graph
-ggsave("/elements_actors_v2.png", width = 190, height = 120, dpi = 300, units = "mm" , bg="white")
-
+ggsave("./elements_actors_v2.png", width = 190, height = 120, dpi = 300, units = "mm" , bg="white")
+ggsave("./elements_actors_v2.esp", width = 190, height = 120, dpi = 300, units = "mm" , bg="white")
 
 
 
