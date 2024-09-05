@@ -18,7 +18,7 @@ library(viridis)
 source("functions.R")
 
 # load review data from covidence and remove "consensus" entries
-Data <- read_csv("review_283729_20240528164400_consstency_check.csv") %>% mutate(`Covidence #` = paste0("#", as.character(`Covidence #`))) %>% filter(`Reviewer Name` != "Consensus")
+Data <- read_csv("review_283729_20240528164400_consistency_check.csv") %>% mutate(`Covidence #` = paste0("#", as.character(`Covidence #`))) %>% filter(`Reviewer Name` != "Consensus")
 
 # extract data on paper types, regions, scale, nexus elements, nexus challenges
 # governance types, policy instruments, actors, and cross cutting issues
